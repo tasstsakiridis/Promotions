@@ -812,6 +812,13 @@ console.log('product', product);
             console.log('[buildInput] product', product);
             var html = '';
             var value = '';
+            var step = 'any';
+            var additionalValidation = '';
+            if (marketName == 'Taiwan' && obj.fieldPath == 'Quantity__c') {
+                step = '1';
+                additionalValidation = ' onkeypress="return (event.charCode == 8 || event.charCode == 0 || event.charCode == 13) ? null : event.charCode >= 48 && event.charCode <= 57"';
+            }
+            console.log('[buildInput] step: ', step);
             if (pmi != null) {
                 value = pmi[obj.fieldPath];
             } else {
@@ -839,7 +846,7 @@ console.log('product', product);
                         value = numeral(value).format('0,0');
                         html += '<span id="'+obj.fieldPath+prodId+'" field="'+obj.fieldPath+'" style="margin-bottom: 0.5rem;" data-currency-code="'+userCurrency+'">'+value+'</span>';
                     } else {
-                        html += '<input id="'+obj.fieldPath+prodId+'" field="'+obj.fieldPath+'" data-prod-id="'+prodId+'" type="'+inputTypeMap[obj.type]+'" step="any" value="'+value+'" class="fieldInput slds-input" ' + (isReadOnly ? 'disabled' : '') + ' />';
+                        html += '<input id="'+obj.fieldPath+prodId+'" field="'+obj.fieldPath+'" data-prod-id="'+prodId+'" type="'+inputTypeMap[obj.type]+'" step="'+step+'" value="'+value+'" class="fieldInput slds-input" ' + (isReadOnly ? 'disabled' : '') + additionalValidation + ' />';
                     }
                     break;
                 case 'select':
