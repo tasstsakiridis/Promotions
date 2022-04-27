@@ -97,9 +97,13 @@
         var filterRowsPerPage = 10;
         
         var thisPromotion = {!serializedPromotion};
-        var pmiList = {!serializedMaterialItemList};        
+        console.log('thisPromotion', thisPromotion);
+        var pmiList = {!serializedMaterialItemList};
+        console.log('pmiList', pmiList);        
         var productList = {!serializedProductList};
-        var activityItems = {!serializedActivityItems};
+        console.log('productList', productList);
+        var activityItems = [{!serializedActivityItems}][0];
+        console.log('activityItems', activityItems);
         var pmiFS = {!serializedMaterialItemFS};
         var readOnlyFields = [{!serializedReadOnlyFieldList}][0];
         var promotionType;
@@ -743,6 +747,7 @@ console.log('product', product);
 
                 buildActivityItems();
             } else {
+                j$('#activityItemsSection').hide();
                 buildMaterialItems();
                 filterProducts();                
             }

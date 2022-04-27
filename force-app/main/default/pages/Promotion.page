@@ -207,12 +207,17 @@
 
         var updatePromotionDetails = function(event) {
             try {
+                let objectAPIName = event.getParam("sObjectAPIName");
                 var activityName = event.getParam("sObjectName");
                 let activityId = event.getParam('sObjectId');
                 let instanceId = event.getParam('instanceId');
                 console.log('promotionActivityName: ', activityName);
                 console.log('promotionActivityId: ', activityId);
                 console.log('instanceId: ', instanceId);
+                console.log('objectAPIName: ', objectAPIName);
+                if (objectAPIName != 'Promotion_Activity__c') { 
+                    return;
+                }
                 
                 let fldName = j$("input[field='Name']");
                 const promoName = thisAccount.Name + '-' + activityName;
@@ -592,7 +597,10 @@
                                 { searchString: relatedValue, recordId: thisValue, label:obj.fieldPath, pluralLabel: '', sObjectAPIName: lookupField.objectName, nameField: lookupField.nameFieldToReturn, filterClause: lookupField.filter, listIconSVGPath:"/resource/SLDS091/assets/icons/standard-sprite/svg/symbols.svg#"+lookupField.svgClass, listIconClass:"slds-icon-standard-"+lookupField.svgClass, objectLabel: lookupField.objectLabel, closeResultListLabel:closeResultListLabelText, showCreateNewOption: false, isReadOnly: isReadOnly},
                                 obj.fieldPath,
                                 function(cmp) {
-                                    if (marketName == 'Australia' || marketName == 'Taiwan') {
+                                    console.log('marketName: ', marketName);
+                                    console.log('cmp: ', cmp);
+                                    console.log('obj: ', obj);
+                                    if ((marketName == 'Australia' || marketName == 'Taiwan') && (obj.fieldPath == 'Promotion_Activity__c' || obj.fieldPath == 'Promotion_Activity_AUD__c')) {                                        
                                     	$A.eventService.addHandler({"event":"c:updateLookupIdEvent", "handler": updatePromotionDetails });
                                     }
                                 }
