@@ -117,7 +117,7 @@
         	display: none;
         }
         .Creative_Formats__c:after {
-            content: '(include exact specs. ie: Print items A4, A3 etc and Digital - Portrait/landscape)';
+            content: '(eg. logo only, A3, A4, digital only, specs, file type required)';
             color: #c23934;  
             margin-left: 10px;
         }        
@@ -126,6 +126,17 @@
         	color: #c23934;
         	margin-left: 10px;
         }
+        .Channel_Requirements__c:after {
+            content: '(Please enter what is required from the Channel Team. eg. supply logos, bespoke artwork, production of assets, etc.)';
+            color: #c23934;
+            margin-left: 10px;
+        }
+        .Creative_Specifications__c:after {
+            content: '(Please provide all measurements in mm)';
+            color: #c23934;
+            margin-left: 10px;
+        }
+        
     </style>
     
     <script src="{!urlPrefix}/soap/ajax/35.0/connection.js" type="text/javascript"></script>
@@ -207,12 +218,17 @@
 
         var updatePromotionDetails = function(event) {
             try {
+                let objectAPIName = event.getParam("sObjectAPIName");
                 var activityName = event.getParam("sObjectName");
                 let activityId = event.getParam('sObjectId');
                 let instanceId = event.getParam('instanceId');
                 console.log('promotionActivityName: ', activityName);
                 console.log('promotionActivityId: ', activityId);
                 console.log('instanceId: ', instanceId);
+                console.log('objectAPIName: ', objectAPIName);
+                if (objectAPIName != 'Promotion_Activity__c') { 
+                    return;
+                }
                 
                 let fldName = j$("input[field='Name']");
                 const promoName = thisAccount.Name + '-' + activityName;
@@ -592,7 +608,10 @@
                                 { searchString: relatedValue, recordId: thisValue, label:obj.fieldPath, pluralLabel: '', sObjectAPIName: lookupField.objectName, nameField: lookupField.nameFieldToReturn, filterClause: lookupField.filter, listIconSVGPath:"/resource/SLDS091/assets/icons/standard-sprite/svg/symbols.svg#"+lookupField.svgClass, listIconClass:"slds-icon-standard-"+lookupField.svgClass, objectLabel: lookupField.objectLabel, closeResultListLabel:closeResultListLabelText, showCreateNewOption: false, isReadOnly: isReadOnly},
                                 obj.fieldPath,
                                 function(cmp) {
-                                    if (marketName == 'Australia' || marketName == 'Taiwan') {
+                                    console.log('marketName: ', marketName);
+                                    console.log('cmp: ', cmp);
+                                    console.log('obj: ', obj);
+                                    if ((marketName == 'Australia' || marketName == 'Taiwan') && (obj.fieldPath == 'Promotion_Activity__c' || obj.fieldPath == 'Promotion_Activity_AUD__c')) {                                        
                                     	$A.eventService.addHandler({"event":"c:updateLookupIdEvent", "handler": updatePromotionDetails });
                                     }
                                 }

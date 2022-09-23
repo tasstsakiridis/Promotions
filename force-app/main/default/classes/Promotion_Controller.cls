@@ -63,7 +63,7 @@ global with sharing class Promotion_Controller {
         
         String marketCountry = '';
         if (callCardId != null && callCardId != '') {
-            thisCallCard = [SELECT Id, Account__c, Account__r.Channel__c, Account__r.Name, Account__r.Store_Type__c, Account__r.Market__c, Account__r.Market__r.Name, Account__r.Market__r.Country__c, Account__r.SubGroup__c, Account__r.Subgroup_Type__c FROM CallCard__c WHERE Id = :callCardId];
+            thisCallCard = [SELECT Id, Account__c, Account__r.Channel__c, Account__r.Name, Account__r.Store_Type__c, Account__r.Market__c, Account__r.Market__r.Name, Account__r.Market__r.Country__c, Account__r.Group__c, Account__r.SubGroup__c, Account__r.Subgroup_Type__c FROM CallCard__c WHERE Id = :callCardId];
             accountId = thisCallCard.Account__c;
             accountName = thisCallCard.Account__r.Name;
             channel = thisCallCard.Account__r.Channel__c;
@@ -74,19 +74,17 @@ global with sharing class Promotion_Controller {
             accountGroup = thisCallCard.Account__r.Group__c;
             accountSubgroup = thisCallCard.Account__r.SubGroup__c;
             accountSubgroupType = thisCallCard.Account__r.Subgroup_Type__c;
-        } else {
-            thisAccount = [SELECT Id, Name, Channel__c, Store_Type__c, Market__c, Market__r.Name, Market__r.Country__c, Group__c, SubGroup__c, Subgroup_Type__c FROM Account WHERE Id = :accountId];
-            accountName = thisAccount.Name;
-            channel = thisAccount.Channel__c;
-            storeType = thisAccount.Store_Type__c;
-            marketId = thisAccount.Market__c;
-            marketName = thisAccount.Market__r.Name;
-            marketCountry = thisAccount.Market__r.Country__c;
-            accountGroup = thisAccount.Group__c;
-            accountSubgroup = thisAccount.SubGroup__c;
-            accountSubgroupType = thisAccount.Subgroup_Type__c;
         }
-
+        thisAccount = [SELECT Id, Name, Channel__c, Store_Type__c, Market__c, Market__r.Name, Market__r.Country__c, Group__c, SubGroup__c, Subgroup_Type__c FROM Account WHERE Id = :accountId];
+        accountName = thisAccount.Name;
+        channel = thisAccount.Channel__c;
+        storeType = thisAccount.Store_Type__c;
+        marketId = thisAccount.Market__c;
+        marketName = thisAccount.Market__r.Name;
+        marketCountry = thisAccount.Market__r.Country__c;
+        accountGroup = thisAccount.Group__c;
+        accountSubgroup = thisAccount.SubGroup__c;
+        accountSubgroupType = thisAccount.Subgroup_Type__c;
         serializedAccount = JSON.serialize(thisAccount);
                 
         if (promoId != null && promoId != '') {
