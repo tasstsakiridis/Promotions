@@ -1,0 +1,404 @@
+<template>
+    <template if:true={error}>
+        <p>{error.body.message}</p>
+    </template>
+    <template if:true={showProgressBar}>
+        <div style="padding: 10px;">
+            <lightning-progress-indicator current-step={currentStep} type="base" variant="base">
+                <lightning-progress-step label={labels.activity.labelPlural} value="activities"></lightning-progress-step>
+                <lightning-progress-step label={labels.accounts.labelPlural} value="accounts"></lightning-progress-step>
+                <lightning-progress-step label={labels.products.labelPlural} value="products"></lightning-progress-step>
+                <lightning-progress-step label={labels.summary.label} value="summary"></lightning-progress-step>
+            </lightning-progress-indicator>
+        </div>
+    </template>
+
+    <template if:true={isWorking}>
+        <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+    </template>
+    <template if:true={isActionPage}>
+        <lightning-card>
+            <h3 slot="title" class="step-title">{labels.promotion.labelPlural}</h3>
+
+            <lightning-button slot="actions" variant="brand" label={promotionFilterLabel} onclick={togglePromotionFilter} class="slds-m-right_small text-capitalised"></lightning-button>
+            <lightning-button-group slot="actions">
+                <lightning-button label={labels.createNew.label} onclick={handleCreateNewClick}></lightning-button>
+                <template if:true={promotionsSelected}>
+                    <lightning-button label={labels.update.label} onclick={handleUpdatePromotionsClick}></lightning-button>
+                </template>
+            </lightning-button-group>
+
+            <lightning-datatable key-field="Id" data={promotions} columns={promotionColumns} onrowselection={handlePromotionSelected}>
+            </lightning-datatable>
+        </lightning-card>
+    </template>
+    <template if:true={isActivityPage}>
+        <lightning-card>
+            <h3 slot="title" class="step-title">{labels.activity.labelPlural}</h3>
+            <lightning-button label={labels.cancel.label} variant="brand" slot="actions" onclick={cancel}></lightning-button>
+
+            <div>   
+                <ul class="slds-grid slds-wrap">
+                    <template for:each={activities} for:item="activity">
+                        <li key={activity.Id} data-key={activity.Id} class="slds-item slds-m-around_x-small bordered-tile-item" onclick={handleActivitySelected}>
+                            <lightning-card data-key={activity.Id} class="slds-p-around_small card">
+                                <h3 slot="title" data-key={activity.Id} class="activity-title">{activity.Name}</h3>
+                                <dl style="padding: 10pt;">
+                                    <dt class="activity-detail-label">Begin Date</dt>
+                                    <dd class="activity-detail-value">{activity.Begin_Date__c}</dd>
+                                    <dt class="activity-detail-label" style="margin-top: 5px;">End Date</dt>
+                                    <dd class="activity-detail-value">{activity.End_Date__c}</dd>
+                                </dl>
+                            </lightning-card>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+        </lightning-card>
+    </template>
+    <template if:true={isAccountPage}>
+        <lightning-card>
+            <h3 slot="title" class="step-title">{labels.accounts.title}</h3>
+            <lightning-button-group slot="actions">
+                <lightning-button label={labels.cancel.label} variant="brand" class="slds-m-right_small" onclick={cancel}></lightning-button>
+                <lightning-button label={labels.prev.label} onclick={moveToPreviousPage}></lightning-button>
+                <lightning-button label={labels.next.label} onclick={moveToNextPage}></lightning-button>
+            </lightning-button-group>
+
+            <div>
+                <lightning-layout multiple-rows="true">
+                    <lightning-layout-item size="12">
+                        <lightning-layout>
+                            <lightning-layout-item size="4" padding="around-small">
+                                <lightning-input label={labels.accounts.label} value={accountNameFilter} onchange={handleAccountNameFilterChange}>
+                                </lightning-input>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="4" padding="around-small">
+                                <lightning-combobox label={labels.cities.label} value={selectedCity} options={cities}
+                                        onchange={handleAccountCityChange}></lightning-combobox>                            
+                            </lightning-layout-item>
+                            <lightning-layout-item size="4" padding="around-small">
+                            
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="12">
+                        <lightning-layout>
+                            <lightning-layout-item size="8" padding="around-small">
+                                <lightning-card title={labels.available.label}>
+                                    <lightning-button slot="actions" label={labels.addSelected.label} onclick={handleAddSelectedAccountsClick}></lightning-button>                                
+
+                                    <div style="height: 600px;">
+                                        <lightning-datatable key-field="Id"
+                                                    data={availableAccounts}
+                                                    columns={accountColumns}
+                                                    enable-infinite-loading
+                                                    onloadmore={loadMoreAccounts}
+                                                    onrowselection={handleAvailableAccountsSelected}>
+                                        </lightning-datatable>
+
+                                    </div>
+                                </lightning-card>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="4" padding="around-small">
+                                <div style="height: 400px;">
+                                    <lightning-card title={labels.selected.label}>
+                                        <lightning-button slot="actions" label={labels.remove.label} onclick={handleRemoveSelectedAccountsClick}></lightning-button>
+                                        <lightning-button slot="actions" label={labels.clear.label} onclick={handleClearSelectedAccountsClick}></lightning-button>
+
+                                        <lightning-datatable key-field="Id" 
+                                                    data={selectedAccounts} 
+                                                    columns={selectedAccountColumns}
+                                                    onrowselection={handleSelectedAccountsSelection}>
+                                        </lightning-datatable>
+                                    </lightning-card>
+                                </div>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </lightning-layout-item>
+                </lightning-layout>
+            </div>
+        </lightning-card>
+    </template>
+    <template if:true={isProductPage}>
+        <lightning-card>
+            <h3 slot="title" class="step-title">{labels.products.title}</h3>
+            <lightning-button-group slot="actions">
+                <lightning-button label={labels.cancel.label} variant="brand" class="slds-m-right_small" onclick={cancel}></lightning-button>
+                <lightning-button label={labels.prev.label} onclick={moveToPreviousPage}></lightning-button>
+                <lightning-button label={labels.next.label} onclick={moveToNextPage}></lightning-button>
+            </lightning-button-group>
+        
+            <div>
+                <lightning-layout multiple-rows="true">
+                    <lightning-layout-item size="12" padding="around-small">
+                        <lightning-layout>
+                            <lightning-layout-item size="3" padding="around-small">
+                                <lightning-combobox name="brands" label={labels.brand.labelPlural} value={selectedBrand}
+                                    placeholder={labels.brand.placeholder} options={brands} onchange={handleBrandChange}>
+                                </lightning-combobox>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="3" padding="around-small">
+                                <lightning-combobox name="productRecordTypes" label={labels.recordType.labelPlural} value={selectedProductRecordType}
+                                    placeholder={labels.recordType.placeholder} options={productRecordTypes} onchange={handleProductRecordTypeChange}>
+                                </lightning-combobox>                            
+                            </lightning-layout-item>
+                            <lightning-layout-item size="3" padding="around-small">
+                                <lightning-combobox name="productUnitSizes" label={labels.unitSize.labelPlural} value={selectedProductUnitSize}
+                                    placeholder={labels.unitSize.placeholder} options={productUnitSizes} onchange={handleProductUnitSizeChange}>
+                                </lightning-combobox>                            
+                            </lightning-layout-item>                        
+                        </lightning-layout>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="8" padding="around-small">
+                        <lightning-card title={labels.available.label}>
+                            <lightning-button slot="actions" label={labels.addSelected.label} onclick={handleAddSelectedProductsClick}></lightning-button>
+
+                            <div style="height: 600px;">
+                                <lightning-datatable key-field="Id"
+                                        data={availableProducts}
+                                        columns={productColumns}
+                                        onrowselection={handleAvailableProductsSelection}>
+                                </lightning-datatable>
+                            </div>
+                        </lightning-card>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="4" padding="around-small">
+                        <lightning-card title={labels.selected.label}>
+                            <lightning-button slot="actions" label={labels.remove.label} onclick={handleRemoveSelectedProductsClick}></lightning-button>
+                            <lightning-button slot="actions" label={labels.clear.label} onclick={handleClearSelectedProductsClick}></lightning-button>
+                        
+                            <lightning-datatable key-field="Id" 
+                                    data={selectedProducts} 
+                                    columns={selectedProductsColumns}
+                                    onrowselection={handleSelectedProductsSelection}>
+                            </lightning-datatable>
+                        </lightning-card>                        
+                    </lightning-layout-item>
+                </lightning-layout>
+            </div>
+        </lightning-card>
+    </template>
+    <template if:true={isSummaryPage}>
+        <lightning-card>
+            <h3 slot="title" class="step-title">{labels.summary.title}</h3>
+            <lightning-button-group slot="actions">
+                <lightning-button label={labels.cancel.label} variant="brand" onclick={cancel}></lightning-button>
+                <lightning-button label={labels.prev.label} onclick={moveToPreviousPage}></lightning-button>
+            </lightning-button-group>
+            <lightning-button label={labels.build.label} slot="actions" variant="brand" class="slds-m-left_small" onclick={buildPromotions}></lightning-button>
+        
+            <div>
+                <ul class="slds-grid slds-wrap">
+                    <template for:each={plannedAccountData} for:item="account">
+                        <li key={account.id} data-key={account.id} class="slds-item slds-m-around_x-small bordered-tile">
+                            <lightning-card data-key={account.id} class="slds-p-around_small card">
+                                <h3 slot="title" data-key={account.id}>{account.name}</h3>
+
+                                <lightning-layout class="slds-m-around_small three-quarter-width">
+                                    <lightning-layout-item size="6" small-device-size="12" medium-device-size="6" padding-around="small" class="slds-m-left_small slds-m-right_small">
+                                        <lightning-input type="date" data-promotion={account.id} label={labels.startDate.label}
+                                            value={account.startDate} min={account.activityBeginDate} max={account.activityEndDate} 
+                                            message-when-range-underflow={labels.date.underflowError} message-when-range-overflow={labels.date.overflowError} 
+                                            onchange={handlePromotionStartDateChange}>
+                                        </lightning-input>
+                                    </lightning-layout-item>
+                                    <lightning-layout-item size="6" small-device-size="12" medium-device-size="6" padding-around="small" class="slds-m-right_small">
+                                        <lightning-input type="date" data-promotion={account.id} label={labels.endDate.label}
+                                            value={account.endDate} min={account.activityBeginDate} max={account.activityEndDate}
+                                            message-when-range-underflow={labels.date.underflowError} message-when-range-overflow={labels.date.overflowError} 
+                                            onchange={handlePromotionEndDateChange}>
+                                        </lightning-input>
+                                    </lightning-layout-item>
+                                </lightning-layout>
+
+                                <lightning-datatable key-field="id"
+                                        data={account.products}
+                                        columns={productInputColumns}
+                                        draft-values={draftValues}
+                                        onsave={handlePlannedQtySave}
+                                        oncancel={handlePlannedQtyCancel}
+                                        oncellchange={handlePlannedQtyCellChange}>
+                                </lightning-datatable>
+                            </lightning-card>
+                        </li>
+                    </template>
+                </ul>
+
+            </div>
+        </lightning-card>
+    </template>
+    <template if:true={isUpdatePage}>
+        <lightning-card>
+            <h3 slot="title" class="step-title">{labels.promotion.labelPlural}</h3>
+            <lightning-button label={labels.back.label} slot="actions" class="slds-m-right-small text-capitalised" onclick={cancel}></lightning-button>
+            <!--
+            <lightning-button label={labels.update.label} variant="brand" slot="actions" class="text-capitalised" onclick={updatePromotions}></lightning-button>
+            -->
+            <div>
+                <lightning-layout>
+                    <lightning-layout-item size="8" padding="around-small">
+                        <ul class="slds-grid slds-wrap">
+                            <template for:each={promotionsToUpdate} for:item="promotion">
+                                <li key={promotion.id} data-key={promotion.id} class="slds-item slds-m-around_x-small bordered-tile">
+                                    <lightning-card data-key={promotion.id} class="slds-p-around_small card">
+                                        <h3 slot="title" data-key={promotion.id}>{promotion.name}</h3>
+                                        <lightning-button label={expandAllLabel} slot="actions" class="text-capitalized" onclick={handleExpandAllTreeGrids}></lightning-button>
+
+                                        <lightning-layout class="slds-m-around_small three-quarter-width">
+                                            <lightning-layout-item size="4" small-device-size="12" medium-device-size="4" padding-around="small"
+                                                class="slds-m-left_small slds-m-right_small">
+                                                <lightning-input type="date" data-promotion={promotion.id} label={labels.startDate.label}
+                                                    value={promotion.startDate} disabled>
+                                                </lightning-input>
+                                            </lightning-layout-item>
+                                            <lightning-layout-item size="4" small-device-size="12" medium-device-size="4" padding-around="small"
+                                                class="slds-m-right_small">
+                                                <lightning-input type="date" data-promotion={promotion.id} label={labels.endDate.label}
+                                                    value={promotion.endDate} disabled>
+                                                </lightning-input>
+                                            </lightning-layout-item>
+                                            <lightning-layout-item size="4" small-device-size="12" medium-device-size="4" padding-around="small"
+                                                class="slds-m-right_small">
+                                                <div style="display: inline;">
+                                                    <lightning-combobox label={labels.products.labelPlural} data-promotion={promotion.id}
+                                                        options={productOptions} value={selectedProduct}
+                                                        onchange={handleAddProductChange}></lightning-combobox>
+                        
+                                                    <lightning-button-group>
+                                                        <lightning-button-icon icon-name="utility:add" alternative-text={labels.add.label}
+                                                            title={labels.add.label} data-promotion={promotion.id}
+                                                            onclick={handleAddProductToPromotion}></lightning-button-icon>
+                                                        <lightning-button-icon icon-name="utility:list" alternative-text={labels.add.label}
+                                                            title={labels.add.label} data-promotion={promotion.id}
+                                                            onclick={handleAddProductToAllPromotions}></lightning-button-icon>
+                        
+                                                    </lightning-button-group>
+                                                </div>
+                                            </lightning-layout-item>
+                                        </lightning-layout>
+
+                                        <lightning-tree-grid key-field="id" data={promotion.products} 
+                                                columns={productUpdateColumns}
+                                                onrowaction={handleUpdateRowAction}>
+                                        </lightning-tree-grid>
+                                        <!--
+                                                        <lightning-datatable key-field="id"
+                                                                data={promotion.products}
+                                                                columns={promotion.columns}
+                                                                draft-values={draftValues}
+                                                                onsave={handlePlannedQtySave}
+                                                                oncancel={handlePlannedQtyCancel}
+                                                                oncellchange={handlePlannedQtyCellChange}>
+                                                        </lightning-datatable>
+                                                        -->
+                                    </lightning-card>
+                                </li>
+                            </template>
+                        </ul>
+
+                    </lightning-layout-item>
+                    <lightning-layout-item size="4" padding="around-small">
+                        <template if:true={isCreatingNewPeriod}>
+                            <div class="bordered-tile slds-m-around_small">
+                                <lightning-card title={labels.createNew.label}>
+                                    <lightning-button-group slot="actions">
+                                        <lightning-button label={labels.cancel.label} class="slds-m-right_small text-capitalized" onclick={cancelNewPeriod}></lightning-button>
+                                        <lightning-button label={labels.save.label} class="text-capitalized" onclick={createNewActual}></lightning-button>
+                                    </lightning-button-group>
+
+                                    <lightning-layout multiple-rows="true">
+                                        <lightning-layout-item size="12" padding="around-small">
+                                            <lightning-input label="Product" value={updateProductName} disabled></lightning-input>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12" padding="around-small">
+                                            <lightning-combobox label="Period" options={periods} value={selectedPeriod} onchange={handlePeriodChange}></lightning-combobox>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12" padding="around-small">
+                                            <lightning-input label="Quantity" value="updatePlanQty" type="number" name="i_PlanQty" onchange={handleUpdatePlanQtyChange}></lightning-input>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12" padding="around-small">
+                                            <lightning-input label="Rebate" value="updatePlanRebate" type="number" name="i_PlanRebate" step="0.01" onchange={handleUpdatePlanRebateChange}></lightning-input>
+                                        </lightning-layout-item>
+                                    </lightning-layout>
+                                    
+                                </lightning-card>
+                            </div>
+                        </template>
+                        <template if:false={isCreatingNewPeriod}>
+                            <p>Select a product and click the Create New action to capture the planned quantity and rebate for another period</p>
+                        </template>
+                    </lightning-layout-item>
+                </lightning-layout>
+            </div>
+        </lightning-card>
+    </template>
+    <!--
+    <template if:true={isResultPage}>
+        <lightning-card>
+            <h3 slot="title">{labels.summary.title}</h3>
+            <lightning-button label={labels.cancel.label} slot="actions" class="slds-m-right-small" onclick={cancel}></lightning-button>
+            <lightning-button label={labels.prev.label} slot="actions" onclick={moveToPreviousPage}></lightning-button>
+            <lightning-button label={labels.createNew.label} slot="actions" onclick={buildPromotions}></lightning-button>
+        
+            <div>
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th scope="col">
+                                <div class="slds-truncate" title="Product">{labels.products.label}</div>
+                            </th>
+                            <template for:each={selectedProducts} for:item="product">
+                                <th scope="col" key={product.Id}>
+                                    <div class="account-header" title={product.Name}>{product.Name}</div>
+                                </th>
+                            </template>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={plannedAccountData} for:item="account">
+                            <tr class="slds-hint-parent" key={account.id}>
+                                <th data-label={account.name} scope="row">
+                                    <div class="slds-truncate" title={account.name}>{account.name}</div>
+                                </th>
+                                <template for:each={account.products} for:item="product">
+                                    <td data-label="Plan Qty" key={product.id}>
+                                        <div><input type="number" min="0" step="1" value="0" data-account={account.id} data-product-id={product.id} onchange={handleAccountProductQtyChange} /></div>
+                                    </td>
+                                </template>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </lightning-card>
+    </template>
+    -->
+    <template if:true={isUpdatingPromotionsPage}>
+        <lightning-card>
+            <h3 slot="title">{labels.summary.title}</h3>
+            <lightning-button label={labels.cancel.label} slot="actions" class="slds-m-right-small"
+                onclick={cancel}></lightning-button>
+            <lightning-button label={labels.update.label} slot="actions" onclick={handleUpdatePromotionsClick}></lightning-button>
+    
+            <div>
+                <ul class="slds-grid slds-wrap">
+                    <template for:each={promotionsToUpdate} for:item="promotion">
+                        <li key={promotion.id} data-key={promotion.id} class="slds-item slds-m-around_x-small bordered-tile">
+                            <lightning-card data-key={promotion.id} class="slds-p-around_small card">
+                                <h3 slot="title" data-key={promotion.id}>{promotion.name} - {promotion.accountName}</h3>
+    
+                                <lightning-datatable key-field="id" data={promotion.products} columns={productInputColumns}
+                                    draft-values={draftValues} onsave={handlePlannedQtySave}
+                                    oncancel={handlePlannedQtyCancel} oncellchange={handlePlannedQtyCellChange}>
+                                </lightning-datatable>
+                            </lightning-card>
+                        </li>
+                    </template>
+                </ul>
+    
+            </div>
+        </lightning-card>
+    </template>
+
+</template>

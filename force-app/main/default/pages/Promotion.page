@@ -792,7 +792,7 @@
                         }
                     }else if (j$(this).attr('type') == 'date' || j$(this).attr('type') == 'datetime-local') {
                         var formattedDate = new Date(j$(this).val()).getTime();
-                        promotion[fldName] = formattedDate;
+                        promotion[fldName] = isNaN(formattedDate) ? null : formattedDate;
                     }else {
                         promotion[fldName] = j$(this).val();
                         if (promotion[fldName] == '' && j$(this).attr('type') == 'number') { promotion[fldName] = null; }

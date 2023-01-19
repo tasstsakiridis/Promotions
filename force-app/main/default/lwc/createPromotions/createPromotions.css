@@ -1,0 +1,50 @@
+.right-align {
+    float: right;
+}
+.bordered-tile {
+    border: 1px solid #999;
+    border-radius: 5px;
+}
+.bordered-tile-item {
+    border: 1px solid #999;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px lightgray;
+    height: 250px;
+    max-width: 300px;
+    max-height: 250px;
+    white-space: pre-wrap;
+    width: 300px;
+}
+.account-header {
+    height: 50px;
+    width: 100px;
+    white-space: pre-wrap;
+}
+.activity-title {
+    color: #666;
+    font-size: 18pt;
+    white-space: pre-wrap;
+}
+.activity-detail-label {
+    color: #a6a6a6;
+    text-transform: uppercase;
+    font-size: 8pt;
+}
+.activity-detail-value {
+    color: #666;
+    font-size: 14pt;
+    font-weight: bold;
+}
+.step-title {
+    font-size: 20pt;
+    color: #4d4d4d;
+}
+.filter {
+    width: 150px;
+}
+.three-quarter-width {
+    width: 80%;
+}
+.text-capitalised {
+    text-transform: capitalize;
+}

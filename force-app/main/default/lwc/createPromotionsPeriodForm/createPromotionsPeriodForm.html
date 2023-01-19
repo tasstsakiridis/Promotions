@@ -1,0 +1,28 @@
+<template>
+    <template if:false={recordId}>
+        <p>Select a product and click the Create New Period action</p>
+    </template>
+
+    <template if:true={recordId}>
+        <lightning-card title="Period Form">
+            <lightning-button-group slot="actions">
+                <lightning-button label={labels.cancel.label} onclick={cancel}></lightning-button>
+                <lightning-button label={labels.save.label} variant="brand" onclick={save}></lightning-button>
+            </lightning-button-group>
+            <lightning-layout multiple-rows="true">
+                <lightning-layout-item size="12" padding="around-small">
+                    <lightning-input label="Product" value={productName} disabled></lightning-input>
+                </lightning-layout-item>
+                <lightning-layout-item size="12" padding="around-small">
+                    <lightning-combobox label="Period" options={periods} value={selectedPeriod}></lightning-combobox>
+                </lightning-layout-item>
+                <lightning-layout-item size="12" padding="around-small">
+                    <lightning-input label="Quantity" value="planQty" type="number" name="i_PlanQty" ></lightning-input>
+                </lightning-layout-item>
+                <lightning-layout-item size="12" padding="around-small">
+                    <lightning-input label="Rebate" value="planRebate" type="number" name="i_PlanRebate"></lightning-input>
+                </lightning-layout-item>
+            </lightning-layout>
+        </lightning-card>
+    </template>
+</template>

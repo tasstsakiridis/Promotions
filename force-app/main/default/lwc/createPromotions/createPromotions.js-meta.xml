@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>55.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>Create Promotions</masterLabel>
+    <description>Component to quickly create one or more Promotions with products</description>
+    <targets>
+        <target>lightning__FlowScreen</target>
+        <target>lightning__AppPage</target>
+        <target>lightning__Tab</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__FlowScreen">
+            <property name="pageNumber" label="Page" type="String" role="inputOnly" />
+        </targetConfig>
+        <targetConfig targets="lightning__AppPage">
+            <property name="viewtype" type="String" default="create" />
+            <event name="createnewperiod" label="Create New Period" description="Event fired to create a new period for the promotion">
+                <schema>
+                    {
+                        "type": "object",
+                        "properties" : {
+                            "recordId": {
+                                "type": "string",
+                                "title": "Record ID",
+                                "description": "Enter an 18-digit record Id for the PMI-Actual"
+                            },
+                            "promotionId": {
+                                "type": "string"
+                            },
+                            "pmiId": {
+                                "type": "string"
+                            },
+                            "productId": {
+                                "type": "string"
+                            },
+                            "actiontype": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                </schema>
+            </event>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>
