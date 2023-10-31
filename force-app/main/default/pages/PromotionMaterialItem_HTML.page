@@ -8,19 +8,19 @@
         
         <script src='https://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js'></script>        
         <script src="https://cdnjs.cloudflare.com/ajax/libs/numeral.js//1.4.5/numeral.min.js"></script>
-		<script src="https://www.b-fonline.com/salesforceresources/SFA/lib/tokenize/Tokenize-2.4/jquery.tokenize.js"></script>
-		<script src="https://www.b-fonline.com/salesforceresources/Bootgrid/js/jquery.bootgrid.js"></script>
-		<script src="https://www.b-fonline.com/salesforceresources/Bootgrid/js/jquery.bootgrid.fa.min.js"></script>        
+		<script src="https://salesforce-static.b-fonline.com/SFA/lib/tokenize/Tokenize-2.4/jquery.tokenize.js"></script>
+		<script src="https://salesforce-static.b-fonline.com/Bootgrid/js/jquery.bootgrid.js"></script>
+		<script src="https://salesforce-static.b-fonline.com/Bootgrid/js/jquery.bootgrid.fa.min.js"></script>        
         
         <apex:includeScript value="/lightning/lightning.out.js" />
         
-	    <link rel="stylesheet" href="https://www.b-fonline.com/salesforceresources/SFA/css/font-awesome.min.css" />
-        <link rel="stylesheet" href="https://www.b-fonline.com/salesforceresources/SFA/css/accountSurvey.css" />
-        <link rel="stylesheet" href="https://www.b-fonline.com/salesforceresources/SFA/lib/tokenize/Tokenize-2.4/jquery.tokenize.css" />
-		<link rel="stylesheet" href="https://www.b-fonline.com/salesforceresources/BootstrapModernPages/css/bootstrap.min.css" />
-		<link rel="stylesheet" href="https://www.b-fonline.com/salesforceresources/BootstrapModernPages/css/bootstrap-theme.min.css" />
-        <link rel="stylesheet" href="https://www.b-fonline.com/salesforceresources/SLDS091/assets/styles/salesforce-lightning-design-system-ltng.min.css" />
-        <link rel="stylesheet" href="https://www.b-fonline.com/salesforceresources/Bootgrid/css/jquery.bootgrid.min.css" />
+	    <link rel="stylesheet" href="https://salesforce-static.b-fonline.com/SFA/css/font-awesome.min.css" />
+        <link rel="stylesheet" href="https://salesforce-static.b-fonline.com/SFA/css/accountSurvey.css" />
+        <link rel="stylesheet" href="https://salesforce-static.b-fonline.com/SFA/lib/tokenize/Tokenize-2.4/jquery.tokenize.css" />
+		<link rel="stylesheet" href="https://salesforce-static.b-fonline.com/BootstrapModernPages/css/bootstrap.min.css" />
+		<link rel="stylesheet" href="https://salesforce-static.b-fonline.com/BootstrapModernPages/css/bootstrap-theme.min.css" />
+        <link rel="stylesheet" href="https://salesforce-static.b-fonline.com/SLDS091/assets/styles/salesforce-lightning-design-system-ltng.min.css" />
+        <link rel="stylesheet" href="https://salesforce-static.b-fonline.com/Bootgrid/css/jquery.bootgrid.min.css" />
     </head>
     <style>
         input.slds-input-clone {
@@ -120,7 +120,7 @@
         var lockPMI = {!lockPMI};
         var labelEmpty = '{!$Label.All}';
         var addSelectedProductsLabel = '{!$Label.Add_Selected_Products}';
-        //var packageProductLabel = '{!$Label.Package}';
+        var packageProductLabel = '{!$Label.Package}';
         
         //arrays for each of the filters to build out select options
         var brandSearch = [];
@@ -1250,7 +1250,7 @@ console.log("items", items);
                 <button type="button" value="{!$Label.Cancel}" class="btn button cancel bg-primary" data-role="none">{!$Label.Cancel}</button>
                 <div id="loadingImage" class="loadingImage" style="display:none">
                     <!--<img src="{!URLFOR($Resource.SFA, '/img/transparentLoading.gif')}"/>-->
-                    <img src="https://www.b-fonline.com/salesforceresources/SFA/img/transparentLoading.gid" />
+                    <img src="https://salesforce-static.b-fonline.com/SFA/img/transparentLoading.gid" />
                 </div>
                 <div id="savedMessage" class="savedMessage" style="display:none">
                     {!$Label.Saved}
@@ -1270,7 +1270,7 @@ console.log("items", items);
                 <button type="button" value="{!$Label.Cancel}" class="btn button cancel bg-primary">{!$Label.Cancel}</button>
                 <div class="loadingImage" style="display:none">
                     <!--<img src="{!URLFOR($Resource.SFA, '/img/transparentLoading.gif')}"/>-->
-                    <img src="https://www.b-fonline.com/salesforceresources/SFA/img/transparentLoading.gid" />
+                    <img src="https://salesforce-static.b-fonline.com/SFA/img/transparentLoading.gid" />
                 </div>
                 <div class="savedMessage" style="display:none">
                     {!$Label.Saved}
@@ -1312,7 +1312,7 @@ console.log("items", items);
         </div>
     </div>
     <!--<script src="{!URLFOR($Resource.bootstrapmodernp, '/startbootstrap-modern-business-gh-pages/js/bootstrap.min.js')}"></script>-->
-    <script src="https://www.b-fonline.com/salesforceresources/BootstrapModernPages/js/bootstrap.min.js"></script>
+    <script src="https://salesforce-static.b-fonline.com/BootstrapModernPages/js/bootstrap.min.js"></script>
     <script> 
         (function(){try{var a=navigator.userAgent; 
         if((a.indexOf('Salesforce')!=-1)&&(a.indexOf('iPhone')!=-1||a.indexOf('iPad')!=-1)&&(a.indexOf('Safari')==-1)){ 

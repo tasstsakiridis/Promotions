@@ -211,7 +211,19 @@ public with sharing class CreatePromotions_Controller {
     }
 
     @AuraEnabled(cacheable=true)
-    public static List<Account> getAccounts(String marketId, String userId, Integer offset) {
+    public static List<Account> getAccounts(String marketId, String userId, Integer offset, String accountNameFilter, String cityFilter) {
+        String soql = 'SELECT Id, Name, RecordTypeId, RecordType.Name, ShippingStreet, ShippingCity FROM Account';
+        soql += ' WHERE Is_Active__c = true AND Market__c =:marketId';
+        if (String.isNotEmpty(accountNameFilter)) {
+            soql += ' AND Name LIKE \'%'+accountNameFilter+'%\'';
+        }
+        if (String.isNotEmpty(cityFilter)) {
+            soql += ' AND ShippingCity LIKE \'%'+cityFilter+'%\'';
+        }
+        soql += ' ORDER BY Name LIMIT 500 OFFSET :offset';
+
+        return Database.query(soql);
+        /*
         return [SELECT Id, Name, RecordTypeId, RecordType.Name, ShippingStreet, ShippingCity
                   FROM Account
                   WHERE Is_Active__c = true
@@ -219,6 +231,7 @@ public with sharing class CreatePromotions_Controller {
                ORDER BY Name
                   LIMIT 100
                  OFFSET :offset];
+        */
     }
 
     @AuraEnabled
@@ -359,7 +372,7 @@ public with sharing class CreatePromotions_Controller {
     }
 
     @AuraEnabled 
-    public static Map<String, Object> createActual(String activityId, String promotionId, String pmiId, String productId, Integer planQty, Decimal planRebate, Boolean casesBottles, Integer period) {
+    public static Map<String, Object> createActual(String activityId, String promotionId, String pmiId, String productId, Decimal planQty, Decimal planRebate, Boolean casesBottles, Integer packQty, Integer period) {
         Map<String, Object> result = new Map<String, Object>();
 
         System.debug('activityId: ' + activityId);
@@ -374,6 +387,13 @@ public with sharing class CreatePromotions_Controller {
         try {
             Promotion_Activity__c activity = [SELECT Id, Name, Promotion_Type__c FROM Promotion_Activity__c WHERE Id =:activityId LIMIT 1];
 
+            // Get Promotion Material Item record type
+            Map<String, Schema.RecordTypeInfo> pmiRecordTypes = Promotion_Material_Item__c.SObjectType.getDescribe().getRecordTypeInfosByName();
+            String rtPromotionMaterialItem = pmiRecordTypes.get('INR-Promotion').getRecordTypeId();
+            if (pmiRecordTypes.containsKey(activity.Promotion_Type__c)) {
+                rtPromotionMaterialItem = pmiRecordTypes.get(activity.Promotion_Type__c).getRecordTypeId();
+            }
+
             // Get PMI Actual record type
             Map<String, Schema.RecordTypeInfo> pmiActualRecordTypes = PMI_Actual__c.SObjectType.getDescribe().getRecordTypeInfosByName();
             String rtPMIActual = pmiActualRecordTypes.get('INR-Promotion').getRecordTypeId();
@@ -381,11 +401,36 @@ public with sharing class CreatePromotions_Controller {
                 rtPMIActual = pmiActualRecordTypes.get(activity.Promotion_Type__c).getRecordTypeId();
             }
 
+            String uom = casesBottles == true ? 'Bottles' : 'Cases';
+
+            if (String.isEmpty(pmiId)) {
+                Promotion_Material_Item__c pmi = new Promotion_Material_Item__c();
+                pmi.Activity__c = activityId;
+                pmi.Promotion__c = promotionId;
+                pmi.RecordTypeId = rtPromotionMaterialItem;
+                pmi.Product_Custom__c = productId;
+
+                Decimal cases = planQty;                    
+                Integer bottles = planQty.intValue() * packQty;
+                if (casesBottles == true) {
+                    cases = planQty / packQty;
+                    bottles = planQty.intValue();
+                }
+                pmi.Plan_Volume__c = cases;
+                pmi.Plan_Bottle__c = bottles;
+                pmi.Cases_Bottles__c = uom;
+                pmi.Plan_Rebate__c = planRebate;
+                insert pmi;
+
+                pmiId = pmi.Id;
+            }
+
             PMI_Actual__c pmia = new PMI_Actual__c();
             pmia.RecordTypeId = rtPMIActual;
             pmia.Activity__c = activityId;
             pmia.Promotion__c = promotionId;
             pmia.Promotion_Material_Item__c = pmiId;
+            pmia.Actual_Cases_Bottles__c = uom;
             pmia.Planned_Qty_for_Period__c = planQty;
             pmia.Planned_Rebate_for_Period__c = planRebate;
             pmia.Period__c = period;
@@ -395,6 +440,9 @@ public with sharing class CreatePromotions_Controller {
 
             result.put('status', 'success');
             result.put('record', pmia);
+            result.put('pmiId', pmiId);
+            result.put('productId', productId);
+            result.put('promotionId', promotionId);
         }catch(Exception ex) {
             throw new AuraHandledException(ex.getMessage());
         }

@@ -51,7 +51,7 @@ import LABEL_JUNE from '@salesforce/label/c.June';
 import LABEL_MARCH from '@salesforce/label/c.March';
 import LABEL_MAY from '@salesforce/label/c.May';
 import LABEL_MY_PROMOTIONS from '@salesforce/label/c.My_Promotions';
-import LABEL_NEXT from '@salesforce/label/c.NEXT';
+import LABEL_NEXT from '@salesforce/label/c.Next';
 import LABEL_NOVEMBER from '@salesforce/label/c.November';
 import LABEL_OCTOBER from '@salesforce/label/c.October';
 import LABEL_PACK_QUANTITY from '@salesforce/label/c.PackQty';
@@ -128,11 +128,11 @@ const PRODUCT_INPUT_COLUMNS = [
 ];
 const PRODUCT_UPDATE_ACTIONS = [
     { label: LABEL_CREATE_NEW, name: "create_new" }
-]
+];
 
 const PRODUCT_UPDATE_COLUMNS = [
     { label: LABEL_PRODUCT, fieldName: 'productName', label: LABEL_PRODUCT, sortOrder: -2 },
-    { label: LABEL_BOTTLES, fieldName: 'casesBottles', type: 'boolean', label: LABEL_CASES_BOTTLES, sortOrder: -1 },
+    { label: LABEL_BOTTLES, fieldName: 'casesBottles', type: 'boolean', sortOrder: -1 },
     { label: LABEL_PLAN_QTY, fieldName: 'planQty', type: 'number', editable: true, typeAttributes: { minimumIntegerDigits: 1, maximumFractionDigits: 0 } },
     { label: LABEL_REBATE, fieldName: 'planRebate', type: 'currency', editable: true, typeAttributes: { minimumIntegerDigits: 1, maximumFractionDigits: 2 } },
     { type: 'action', typeAttributes: { rowActions: PRODUCT_UPDATE_ACTIONS }},
@@ -143,11 +143,13 @@ export default class CreatePromotions extends LightningElement {
         accounts:   { label: 'account', labelPlural: 'accounts', title: 'Select accounts' },
         activity:   { label: 'activity', labelPlural: 'activities', title: LABEL_ACTIVITY_DETAILS },
         add:        { label: LABEL_ADD },
+        addAll:     { label: `${LABEL_ADD} ${LABEL_ALL}`},
         addSelected: { label: LABEL_ADD_SELECTED },
         all:        { label: LABEL_ALL },
         allPromotions: { label: LABEL_ALL + ' ' + LABEL_PROMOTIONS },
         available:  { label: LABEL_AVAILABLE },
         back:       { label: LABEL_BACK },
+        bottles:    { label: LABEL_BOTTLES },
         brand:      { label: LABEL_BRAND, labelPlural: LABEL_BRANDS, placeholder: LABEL_SELECT_BRANDS },
         build:      { label: LABEL_BUILD.replace('{0}', LABEL_PROMOTIONS), message: LABEL_BUILD_MESSAGE.replace('{0}', LABEL_PROMOTIONS) },
         cancel:     { label: LABEL_CANCEL },
@@ -159,6 +161,7 @@ export default class CreatePromotions extends LightningElement {
         date:       { overflowError: LABEL_AFTER_END_DATE_ERROR, underFlowError: LABEL_BEFORE_START_DATE_ERROR },  
         endDate:    { label: LABEL_END_DATE },
         expandAll:  { label: LABEL_EXPAND_ALL },
+        loadMore:   { label: 'Load More Accounts' },
         myPromotions: { label: LABEL_MY_PROMOTIONS },   
         next:       { label: LABEL_NEXT },
         prev:       { label: LABEL_PREV },
@@ -262,6 +265,8 @@ export default class CreatePromotions extends LightningElement {
     isCreatingNewPromotions = false;
     limitToMyPromotions = false;
     isCollapsed = true;
+    isFiltering = false;
+    disableUpdateCasesBottles = true;
 
     plannedAccountData = [];
     draftValues = [];
@@ -271,6 +276,8 @@ export default class CreatePromotions extends LightningElement {
     updateProductName;
     updatePlanQty;
     updatePlanRebate;
+    updateCasesBottles;
+    
     periods = [];
 
     /*
@@ -418,11 +425,15 @@ export default class CreatePromotions extends LightningElement {
     accountsToRemove = [];
     /*  Accounts  */
     getAvailableAccounts() {
-        console.log('[getAvailableAccounts]');
+        console.log('[getAvailableAccounts] accountNameFilter', this.accountNameFilter);
+        console.log('[getAvailableAccounts] selectedCity', this.selectedCity);
+
         getAccounts({
             userId: this.user.Id,
             marketId: this.market.Id,
-            offset: this.accountOffsetCount
+            offset: this.accountOffsetCount,
+            accountNameFilter: this.accountNameFilter,
+            cityFilter: this.selectedCity
         })
         .then(result => {
             console.log('[getAvailableAccounts] accounts', result);
@@ -448,10 +459,15 @@ export default class CreatePromotions extends LightningElement {
                 accountCities.splice(0, 0, { label: this.labels.all.label, value: 'all' });
                 this.cities = [...accountCities];
 
-                accountList = accountList.concat(this.accounts);
+                if (this.isFiltering) {
+                    accountList = [...this.accounts];
+                } else {
+                    accountList = accountList.concat(this.accounts);
+                }
                 
                 this.availableAccounts = [...accountList];
                 this.isGettingAccounts = false;
+                this.isFiltering = false;
                 if (this.targetDataTable) {
                     this.targetDataTable.isLoading = false;
                 }
@@ -467,12 +483,17 @@ export default class CreatePromotions extends LightningElement {
         });
     }
 
-    loadMoreAccounts(event) {
+    loadMoreAccounts(event) {        
         console.log('[loadMoreAccounts] loading more accounts');
-        event.target.isLoading = true;
-        this.loadMoreAccountStatus = 'Loading';
-        this.accountOffsetCount += 100;
-        this.targetDataTable = event.target;
+        try {
+            //event.target.isLoading = true;
+            this.isWorking = true;
+            this.loadMoreAccountStatus = 'Loading';
+            this.accountOffsetCount += 100;
+            //this.targetDataTable = event.target;
+        }catch(ex) {
+            console.log('[loadMoreAccounts] exception', ex);
+        }
         this.getAvailableAccounts();
     }
 
@@ -717,23 +738,30 @@ export default class CreatePromotions extends LightningElement {
                 const tmp = [...this.promotionsToUpdate];
                 let promotion = tmp.find(p => p.id == promotionId);
                 console.log('[handleAddProductToPromotion] promotion', promotion);
+                let productOnPromotion = promotion.products.find(prd => prd.productId == productId) != undefined;
+                if (productOnPromotion) {
+                    this.showToast("error", this.labels.error.label, this.labels.productOnPromotion.error);
+                    return;
+                }
+
                 if (promotion) {
                     const pmia = {
                         "id": promotionId + '-' + product.Id,
+                        "activityId": promotion.activityId,
                         "promotionId": promotionId,
                         "pmiId": null,
                         "productId": product.Id,
                         "productName": product.Name,
-                        "casesBottles": false,
+                        "casesBottles": undefined,
                         "packQty": product.Pack_Quantity__c == undefined ? 1 : product.Pack_Quantity__c,
-                        "planRebate": 0,
+                        "planRebate": '',
                         "periods": [],
                         "isNew": false
                     };
-                    promotion.periods.forEach(prd => {
-                        pmia.periods.push({"period":prd.period, "pmiaId":null});
-                        pmia["planQty:"+prd.period] = 0;
-                        pmia["planRebate:"+prd.period] = 0;
+                    promotion.allPeriods.forEach(prd => {
+                        pmia.periods.push({label: prd.label, value: prd.value, "period":prd.period, "pmiaId":null});
+                        //pmia["planQty:"+prd.period] = 0;
+                        //pmia["planRebate:"+prd.period] = 0;
 
                     });
                     promotion.products.push(pmia);
@@ -764,24 +792,28 @@ export default class CreatePromotions extends LightningElement {
                 console.log('[handleAddProductToPromotion] product', product);            
                 const tmp = [...this.promotionsToUpdate];
                 tmp.forEach(p => {
-                    const pmia = {
-                        "id": p.id + '-' + product.Id,
-                        "promotionId": p.id,
-                        "pmiId": null,
-                        "productId": product.Id,
-                        "productName": product.Name,
-                        "casesBottles": false,
-                        "packQty": product.Pack_Quantity__c == undefined ? 1 : product.Pack_Quantity__c,
-                        "planRebate": 0,
-                        "periods": [],
-                        "isNew": false
-                    };
-                    p.periods.forEach(prd => {
-                        pmia.periods.push({"period":prd.period, "pmiaId":null});
-                        pmia["planQty:"+prd.period] = 0;
-                        pmia["planRebate:"+prd.period] = 0;
-                    });
-                    p.products.push(pmia);
+                    let productOnPromotion = p.products.find(prd => prd.productId == productId) != undefined;
+                    if (!productOnPromotion) {
+                        const pmia = {
+                            "id": p.id + '-' + product.Id,
+                            "activityId": p.activityId,
+                            "promotionId": p.id,
+                            "pmiId": null,
+                            "productId": product.Id,
+                            "productName": product.Name,
+                            "casesBottles": undefined,
+                            "packQty": product.Pack_Quantity__c == undefined ? 1 : product.Pack_Quantity__c,
+                            "planRebate": '',
+                            "periods": [],
+                            "isNew": false
+                        };
+                        p.allPeriods.forEach(prd => {
+                            pmia.periods.push({label: prd.label, value: prd.value, "period":prd.period, "pmiaId":null});
+                            //pmia["planQty:"+prd.period] = 0;
+                            //pmia["planRebate:"+prd.period] = 0;
+                        });
+                        p.products.push(pmia);
+                    }
                 });
                 this.promotionsToUpdate = [...tmp];            
                 this.currentStep = '';
@@ -975,6 +1007,8 @@ export default class CreatePromotions extends LightningElement {
                     "originalStartDate": p.Promotion_Start_Date__c,
                     "originalEndDate": p.Promotion_End_Date__c,
                     "columns": PRODUCT_UPDATE_COLUMNS,
+                    "numberOfPeriods": p.Number_of_Periods__c,
+                    "allPeriods": [],
                     "completedPeriods": [],
                     "periods": [],
                     "products": []
@@ -1054,9 +1088,13 @@ export default class CreatePromotions extends LightningElement {
                 let period = '';
                 for(var i = 0; i < p.Number_of_Periods__c; i++) {
                     for(var j = 0; j < promotion.products.length; j++) {
+                        period = this.getPeriodName(p.Promotion_Start_Date__c, i);
+
                         if (promotion.products[j].completedPeriods.indexOf(i) < 0) {
-                            period = this.getPeriodName(p.Promotion_Start_Date__c, i);
                             promotion.products[j].periods.push({label: period, value: i.toString() });
+                        }
+                        if (promotion.allPeriods.findIndex(prd => prd.period == i) < 0) {
+                            promotion.allPeriods.push({label: period, value: i.toString(), period: i });                            
                         }
                     }
                 }
@@ -1113,21 +1151,30 @@ export default class CreatePromotions extends LightningElement {
         if (row.level == 2) {
             pmi = promotion.products.find(p => p.pmiId == row.pmiId);            
         }
-        console.log('[handleUpdateRowAction] pmi', pmi);
+        console.log('[handleUpdateRowAction] pmi', JSON.parse(JSON.stringify(pmi)));
+        console.log('[handleUpdateRowAction] pmi.pmiId', pmi.pmiId);
+        console.log('[handleUpdateRowAction] periods', pmi.periods);
+        console.log('[handleUpdateRowAction] completedPeriods', pmi.completedPeriods);
+        let numberOfPeriods = pmi.periods == undefined ? 0 : pmi.periods.length;
+        let numberOfCompletedPeriods = pmi.completedPeriods == undefined ? 0 : pmi.completedPeriods.length;
+        console.log('[handleUpdatwRowAction] # of periods', numberOfPeriods);
+        console.log('[handleUpdatwRowAction] # of completed periods', numberOfCompletedPeriods);
+
         try {
             switch(actionName) {
                 case 'create_new':
-                    if (pmi.periods == undefined || pmi.periods.length == 0) {
+                    if (pmi.pmiId != null && numberOfPeriods == numberOfCompletedPeriods) {
                         this.showToast('warning', this.labels.warning.label, LABEL_ALL_PERIODS_COMPLETED_MSG);
                         return;
                     }
-
                     this.updateProduct = pmi;
                     this.updateProductName = pmi.productName;
                     this.updatePlanQty = 0;
                     this.updatePlanRebate = 0;
                     this.periods = [...pmi.periods];
+                    this.disableUpdateCasesBottles = pmi.casesBottles != undefined;
                     this.isCreatingNewPeriod = true;                
+                    
                     break;
 
                 default:
@@ -1140,6 +1187,10 @@ export default class CreatePromotions extends LightningElement {
     handlePeriodChange(event) {
         this.selectedPeriod = event.detail.value;
     }
+    handleUpdateCasesBottlesChange(event) {
+        this.updateCasesBottles = event.detail.checked;
+        console.log('[handleUpdateCasesBottlesChange] updateCasesBottles', this.updateCasesBottles);
+    }
     handleUpdatePlanQtyChange(event) {
         this.updatePlanQty = event.detail.value;
     }
@@ -1149,13 +1200,22 @@ export default class CreatePromotions extends LightningElement {
     cancelNewPeriod() {
         this.updateProduct = undefined;
         this.updateProductName = undefined;
+        this.updateCasesBottles = false;
         this.updatePlanQty = 0;
         this.updatePlanRebate = 0;
         this.periods = [];
         this.isCreatingNewPeriod = false;
     }
+
     createNewActual() {   
-        console.log('[createNewActual] updateProduct', this.updateProduct);     
+        console.log('[createNewActual] updateProduct', JSON.parse(JSON.stringify(this.updateProduct)));    
+        console.log('[createNewActual] updatePlanQty', this.updatePlanQty);
+        console.log('[createNewActual] updatePlanRebate', this.updatePlanRebate);
+        console.log('[createNewActual] period', this.selectedPeriod); 
+        console.log('[createNewActual] updateCasesBottles', this.updateCasesBottles);
+        console.log('[createNewActual] updateProduct.casesBottles', this.updateProduct.casesBottles);
+        this.isWorking = true;
+
         createActual({
             activityId: this.updateProduct.activityId,
             promotionId: this.updateProduct.promotionId,
@@ -1163,20 +1223,25 @@ export default class CreatePromotions extends LightningElement {
             productId: this.updateProduct.productId,
             planQty: this.updatePlanQty,
             planRebate: this.updatePlanRebate,
-            casesBottles: this.updateProduct.casesBottles,
+            casesBottles: this.updateProduct.casesBottles == undefined ? this.updateCasesBottles : this.updateProduct.casesBottles,
+            packQty: this.updateProduct.packQty,
             period: this.selectedPeriod
         })
         .then(result => {
             console.log('[createActual] result', result);
             let promotion = this.promotionsToUpdate.find(p => p.id == result.record.Promotion__c);
-            let product = promotion.products.find(p => p.pmiId == result.record.Promotion_Material_Item__c);
+            let product = promotion.products.find(p => p.productId == result.productId);
+            console.log('[createActual] promotion', promotion);
+            console.log('[createActual] product', product);
+            if (product._children == undefined) { product._children = []; }
+
             product._children.push({
                 "id": result.record.Id,
                 "promotion": result.record.Promotion__c,
                 "pmiId": result.record.Promotion_Material_Item__c,
                 "productName": this.getPeriodName(promotion.startDate, result.record.Period__c),
                 "productId": result.record.Product__c,
-                "casesBottles": result.record.Cases_Bottles__c == 'Bottles',
+                "casesBottles": result.record.Actual_Cases_Bottles__c == 'Bottles',
                 "planQty": result.record.Planned_Qty_for_Period__c,
                 "planRebate": result.record.Planned_Rebate_for_Period__c
             });
@@ -1188,11 +1253,13 @@ export default class CreatePromotions extends LightningElement {
             const grid = this.template.querySelector('lightning-tree-grid');
             grid.collapseAll();
             grid.expandAll();
+
+            this.isWorking = false;
         })
         .catch(error => {
             console.log('[createNewActual] error', error);
             this.error = error;
-        })
+        });
     }
 
     handleAccountProductQtyChange(event) {
@@ -1217,9 +1284,15 @@ export default class CreatePromotions extends LightningElement {
                     console.log('[onsave] account', account);
                     const product = account.products.find(p => p.productId == productId);
                     console.log('[onsave] product', product);
-                    product.planQty = parseInt(v.planQty);
-                    product.casesBottles = v.casesBottles == undefined ? false : v.casesBottles;
-                    product.planRebate = parseFloat(v.planRebate);
+                    if (v.planQty != undefined) {
+                        product.planQty = parseInt(v.planQty);
+                    }
+                    if (v.casesBottles != undefined) {
+                        product.casesBottles = v.casesBottles == undefined ? false : v.casesBottles;
+                    }
+                    if (v.planRebate != undefined) {
+                        product.planRebate = parseFloat(v.planRebate);
+                    }
 
                 } else {
                     let period = 0;
@@ -1300,8 +1373,10 @@ export default class CreatePromotions extends LightningElement {
     }
 
     handleAccountNameFilterChange(event) {
+        this.isFiltering = true;
         this.accountNameFilter = event.detail.value;
-        this.filterAccounts();
+        //this.filterAccounts();
+        this.getAvailableAccounts();
     }
     handleAccountCityChange(event) {
         this.selectedCity = event.detail.value;
@@ -1309,6 +1384,9 @@ export default class CreatePromotions extends LightningElement {
     }
 
     filterAccounts() {
+        console.log('accountNameFilter', this.accountNameFilter);
+        console.log('selectedCity', this.selectedCity);
+        this.isFiltering = true;
         if (this.accountNameFilter == '' && this.selectedCity == 'all') {
             this.availableAccounts = this.accounts;
         } else {

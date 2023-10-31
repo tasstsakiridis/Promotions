@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>Activity</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Activity</shortDescription>
+        <value>Activity</value>
+    </labels>
+    <labels>
+        <fullName>Add_Selected</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Add Selected</shortDescription>
+        <value>Add Selected</value>
+    </labels>
+    <labels>
+        <fullName>All_Periods_Completed</fullName>
+        <categories>messages</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>All Periods Completed</shortDescription>
+        <value>All periods for this product have been planned for.</value>
+    </labels>
+    <labels>
+        <fullName>Build_Record</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Build Record</shortDescription>
+        <value>Build {0}</value>
+    </labels>
+    <labels>
+        <fullName>Building_Records</fullName>
+        <categories>labels, messages</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Building Records</shortDescription>
+        <value>Building {0}.  Please wait...</value>
+    </labels>
+    <labels>
+        <fullName>Date_After_EndDate_Error</fullName>
+        <categories>errors</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Date After EndDate Error</shortDescription>
+        <value>Date entered is after the Activity End Date</value>
+    </labels>
+    <labels>
+        <fullName>Date_Before_StartDate_Error</fullName>
+        <categories>errors</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Date Before StartDate Error</shortDescription>
+        <value>Date entered is before Activity Begin Date</value>
+    </labels>
+    <labels>
+        <fullName>My_Promotions</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>My Promotions</shortDescription>
+        <value>My Promotions</value>
+    </labels>
+    <labels>
+        <fullName>Promotion</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Promotion</shortDescription>
+        <value>Promotion</value>
+    </labels>
+    <labels>
+        <fullName>Promotions</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Promotions</shortDescription>
+        <value>Promotions</value>
+    </labels>
+    <labels>
+        <fullName>Rebate</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Rebate</shortDescription>
+        <value>Rebate</value>
+    </labels>
+    <labels>
+        <fullName>RecordTypes</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RecordTypes</shortDescription>
+        <value>Record Types</value>
+    </labels>
+    <labels>
+        <fullName>Select_Record_Type</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select Record Type</shortDescription>
+        <value>Select a record type</value>
+    </labels>
+    <labels>
+        <fullName>Select_Unit_Size</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select Unit Size</shortDescription>
+        <value>Select a unit size</value>
+    </labels>
+    <labels>
+        <fullName>Unit_Sizes</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unit Sizes</shortDescription>
+        <value>Unit Sizes</value>
+    </labels>
+    <labels>
+        <fullName>Update</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update</shortDescription>
+        <value>Update</value>
+    </labels>
+    <labels>
+        <fullName>Cases_Bottles</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cases_Bottles</shortDescription>
+        <value>Cases / Bottles</value>
+    </labels>
+    <labels>
+        <fullName>Created_Successfully</fullName>
+        <categories>labels, messages</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Created Successfully</shortDescription>
+        <value>{0} created successfully</value>
+    </labels>
+    <labels>
+        <fullName>Plan_Qty</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Plan Qty</shortDescription>
+        <value>Plan Qty</value>
+    </labels>
+</CustomLabels>

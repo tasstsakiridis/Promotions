@@ -45,6 +45,10 @@ private class CreatePromotions_Controller_Test {
             insert brand;
             
             List<Product__c> products = helper.createProducts(3, 'Wet Goods', market.Id, brand.Id, false);
+            for(Product__c p : products) {
+                p.Pack_Quantity__c = 12;
+                p.Unit_Size__c = 700;
+            }
             insert products;
             
             Promotion_Activity__c activity1 = new Promotion_Activity__c();
@@ -68,7 +72,7 @@ private class CreatePromotions_Controller_Test {
             List<Product__c> availableProducts = CreatePromotions_Controller.getProducts(market.Id, user1.Id, 'On');
             System.assertNotEquals(0, availableProducts.size(), 'number of Products dont match');
 
-            List<Account> availableAccounts = CreatePromotions_Controller.getAccounts(market.Id, user1.Id, 0);
+            List<Account> availableAccounts = CreatePromotions_Controller.getAccounts(market.Id, user1.Id, 0, 'India', 'India');
             System.assertNotEquals(0, availableAccounts.size(), 'number of Accounts dont match');
 
             CreatePromotions_Controller.PromotionItemData pid = new CreatePromotions_Controller.PromotionItemData();
@@ -76,6 +80,9 @@ private class CreatePromotions_Controller_Test {
             pid.promotionId = null;
             pid.productId = products.get(0).Id;
             pid.plannedQty = 10;
+            pid.packQty = 12;
+            pid.casesBottles = true;
+            pid.plannedRebate = 1.0;
 
             CreatePromotions_Controller.PromotionData pd = new CreatePromotions_Controller.PromotionData();
             pd.id = null;
@@ -98,7 +105,7 @@ private class CreatePromotions_Controller_Test {
 
             String promotionsString = JSON.serialize(container);
             
-            Map<String, Object> createResult = CreatePromotions_Controller.createPromotions(market.Id, market.Name, activity1.Id, 'Promotion', promotionsString);
+            Map<String, Object> createResult = CreatePromotions_Controller.createPromotions(market.Id, market.Name, activity1.Id, 'INR-Promotion', promotionsString);
             System.assertNotEquals(null, createResult.get('promotions'), 'Promotions not created');
 
             List<Promotion__c> promotions = CreatePromotions_Controller.getPromotions(user1.Id, market.Id, 0, true);
@@ -154,6 +161,8 @@ private class CreatePromotions_Controller_Test {
             Map<String, Object> updateResult = CreatePromotions_Controller.updatePromotions(container);
             System.assertEquals('SUCCESS', updateResult.get('status'), 'Update method returned an error');
 
+            Promotion_Material_Item__c thePMI = thePromotion.Promotion_Material_Items__r[0];
+            Map<String, Object> actualResult = CreatePromotions_Controller.createActual(thePromotion.Promotion_Activity__c, thePromotion.Id, thePMI.Id, thePMI.Product_Custom__c, 12, thePMI.Plan_Rebate__c, true, thePMI.Product_Pack_Qty__c.intValue(), 1);
             Test.stopTest();
         }
     }

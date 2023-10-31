@@ -87,13 +87,13 @@
                             <lightning-layout-item size="8" padding="around-small">
                                 <lightning-card title={labels.available.label}>
                                     <lightning-button slot="actions" label={labels.addSelected.label} onclick={handleAddSelectedAccountsClick}></lightning-button>                                
+                                    <!--<lightning-button slot="actions" label={labels.loadMore.label} onclick={loadMoreAccounts}></lightning-button>-->
 
                                     <div style="height: 600px;">
                                         <lightning-datatable key-field="Id"
                                                     data={availableAccounts}
                                                     columns={accountColumns}
                                                     enable-infinite-loading
-                                                    onloadmore={loadMoreAccounts}
                                                     onrowselection={handleAvailableAccountsSelected}>
                                         </lightning-datatable>
 
@@ -270,7 +270,7 @@
                                                             title={labels.add.label} data-promotion={promotion.id}
                                                             onclick={handleAddProductToPromotion}></lightning-button-icon>
                                                         <lightning-button-icon icon-name="utility:list" alternative-text={labels.add.label}
-                                                            title={labels.add.label} data-promotion={promotion.id}
+                                                            title={labels.addAll.label} data-promotion={promotion.id}
                                                             onclick={handleAddProductToAllPromotions}></lightning-button-icon>
                         
                                                     </lightning-button-group>
@@ -312,7 +312,10 @@
                                             <lightning-input label="Product" value={updateProductName} disabled></lightning-input>
                                         </lightning-layout-item>
                                         <lightning-layout-item size="12" padding="around-small">
-                                            <lightning-combobox label="Period" options={periods} value={selectedPeriod} onchange={handlePeriodChange}></lightning-combobox>
+                                            <lightning-combobox label="Period" options={periods} value={selectedPeriod} onchange={handlePeriodChange}></lightning-combobox>                                            
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="12" padding="around-small">
+                                            <lightning-input label={labels.bottles.label} value={updateCasesBottles} type="checkbox" disabled={disableUpdateCasesBottles} name="i_Bottles" onchange={handleUpdateCasesBottlesChange}></lightning-input>
                                         </lightning-layout-item>
                                         <lightning-layout-item size="12" padding="around-small">
                                             <lightning-input label="Quantity" value="updatePlanQty" type="number" name="i_PlanQty" onchange={handleUpdatePlanQtyChange}></lightning-input>

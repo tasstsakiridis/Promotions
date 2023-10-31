@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Month_Name_Abbrev__c</fullName>
+    <externalId>false</externalId>
+    <formula>CASE(
+MONTH(ADDMONTHS(Promotion_Start_Date__c, Period__c)), 1, $Label.Jan, 2, $Label.Feb,3,$Label.Mar,4,$Label.Apr,5,$Label.May,6,$Label.Jun,7,$Label.Jul,8,$Label.Aug,9,$Label.Sep,10,$Label.Oct,11,$Label.Nov,12,$Label.Dec,&apos;UNKNOWN&apos;)</formula>
+    <label>Month Name Abbrev</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>
