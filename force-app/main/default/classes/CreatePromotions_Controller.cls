@@ -116,7 +116,7 @@ public with sharing class CreatePromotions_Controller {
 
         Market__c m = [SELECT Id, Name FROM Market__c WHERE Name =:marketName LIMIT 1];
 
-        bfObjectDescribe obj_Activity = new bfObjectDescribe('Promotion_Activity__c');
+        bfObjectDescribe obj_Activity = new bfObjectDescribe('Promotion_Activity__c');        
         obj_Activity.getDescribe(true, true, false);
 
         bfObjectDescribe obj_Promotion = new bfObjectDescribe('Promotion__c');
@@ -210,19 +210,39 @@ public with sharing class CreatePromotions_Controller {
                     ORDER BY Name];
     }
 
-    @AuraEnabled(cacheable=true)
-    public static List<Account> getAccounts(String marketId, String userId, Integer offset, String accountNameFilter, String cityFilter) {
-        String soql = 'SELECT Id, Name, RecordTypeId, RecordType.Name, ShippingStreet, ShippingCity FROM Account';
-        soql += ' WHERE Is_Active__c = true AND Market__c =:marketId';
-        if (String.isNotEmpty(accountNameFilter)) {
-            soql += ' AND Name LIKE \'%'+accountNameFilter+'%\'';
-        }
-        if (String.isNotEmpty(cityFilter)) {
-            soql += ' AND ShippingCity LIKE \'%'+cityFilter+'%\'';
-        }
-        soql += ' ORDER BY Name LIMIT 500 OFFSET :offset';
+    @AuraEnabled(cacheable=true) 
+    public static List<AggregateResult> getCities(String userId, String marketId) {
+        return [SELECT ShippingCity FROM Account WHERE Is_Active__c = true AND Market__c =:marketId GROUP BY ShippingCity];
+    }
 
-        return Database.query(soql);
+    @AuraEnabled(cacheable=true)
+    public static Map<String, Object> getAccounts(String userId, String marketId, Integer offset, String accountNameFilter, String cityFilter, String areaFilter) {
+        Map<String, Object> result = new Map<String, Object>();
+
+        String soql = 'SELECT Id, Name, RecordTypeId, RecordType.Name, ShippingStreet, ShippingCity, City__c, Area__c FROM Account';
+        String whereClause = ' WHERE Is_Active__c = true AND Market__c =:marketId';
+        if (String.isNotEmpty(accountNameFilter)) {
+            whereClause += ' AND Name LIKE \'%'+accountNameFilter+'%\'';
+        }
+
+        if (String.isNotEmpty(cityFilter)) {
+            whereClause += ' AND City__c =:cityFilter';
+
+        }
+        if (String.isNotEmpty(areaFilter)) {
+            whereClause += ' AND Area__c =:areaFilter';
+
+        }
+
+        soql += whereClause + ' ORDER BY Name LIMIT 500 OFFSET :offset ';
+        List<Account> accounts = Database.query(soql);
+        result.put('accounts', accounts);
+
+        String countQuery = 'SELECT COUNT() FROM Account ' + whereClause + ' LIMIT 2000';
+        Integer numberOfRows = Database.countQuery(countQuery);
+        result.put('numberOfAccounts', numberOfRows);
+
+        return result;
         /*
         return [SELECT Id, Name, RecordTypeId, RecordType.Name, ShippingStreet, ShippingCity
                   FROM Account
@@ -279,7 +299,7 @@ public with sharing class CreatePromotions_Controller {
         System.debug('# of promotions sent from client: ' + container.promotions.size());
         for(PromotionData pd : container.promotions) {
             Promotion__c p = new Promotion__c();
-            p.Name = pd.name;
+            p.Name = pd.name.left(80);
             p.RecordTypeId = rtPromotion;
             p.Promotion_Activity__c = pd.activityId;
             p.Account__c = pd.accountId;

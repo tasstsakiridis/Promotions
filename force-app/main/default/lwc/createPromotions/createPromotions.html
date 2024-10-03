@@ -1,7 +1,4 @@
 <template>
-    <template if:true={error}>
-        <p>{error.body.message}</p>
-    </template>
     <template if:true={showProgressBar}>
         <div style="padding: 10px;">
             <lightning-progress-indicator current-step={currentStep} type="base" variant="base">
@@ -16,6 +13,10 @@
     <template if:true={isWorking}>
         <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
     </template>
+    <template if:true={error}>
+        <c-error-panel errors={error}></c-error-panel>
+    </template>
+
     <template if:true={isActionPage}>
         <lightning-card>
             <h3 slot="title" class="step-title">{labels.promotion.labelPlural}</h3>
@@ -57,7 +58,7 @@
         </lightning-card>
     </template>
     <template if:true={isAccountPage}>
-        <lightning-card>
+        <lightning-card>            
             <h3 slot="title" class="step-title">{labels.accounts.title}</h3>
             <lightning-button-group slot="actions">
                 <lightning-button label={labels.cancel.label} variant="brand" class="slds-m-right_small" onclick={cancel}></lightning-button>
@@ -74,11 +75,12 @@
                                 </lightning-input>
                             </lightning-layout-item>
                             <lightning-layout-item size="4" padding="around-small">
-                                <lightning-combobox label={labels.cities.label} value={selectedCity} options={cities}
+                                <lightning-combobox label={labels.cities.label} value={selectedCity} options={cityOptions}
                                         onchange={handleAccountCityChange}></lightning-combobox>                            
                             </lightning-layout-item>
                             <lightning-layout-item size="4" padding="around-small">
-                            
+                                <lightning-combobox label={labels.area.label} value={selectedArea} options={areaOptions}
+                                    onchange={handleAccountAreaChange}></lightning-combobox>                            
                             </lightning-layout-item>
                         </lightning-layout>
                     </lightning-layout-item>
@@ -86,14 +88,26 @@
                         <lightning-layout>
                             <lightning-layout-item size="8" padding="around-small">
                                 <lightning-card title={labels.available.label}>
-                                    <lightning-button slot="actions" label={labels.addSelected.label} onclick={handleAddSelectedAccountsClick}></lightning-button>                                
+                                    <div slot="actions">
+                                        <span>{accountPageSummary}</span>
+                                        <lightning-button-group class="slds-m-left_small">
+                                            <template lwc:if={showAccountPrevPageButton}>
+                                                <lightning-button lwc:ref="accountPrevPageButton" label={labels.prev.label} onclick={prevAccountPage}></lightning-button>
+                                            </template>
+                                            <template lwc:if={showAccountNextPageButton}>
+                                                <lightning-button lwc:ref="accountNextPageButton" label={labels.next.label} onclick={nextAccountPage}></lightning-button>
+                                            </template>
+                                        </lightning-button-group>
+                                        <lightning-button slot="actions" label={labels.addSelected.label} class="slds-m-left_medium"
+                                            onclick={handleAddSelectedAccountsClick}></lightning-button>
+                                    </div>
+
                                     <!--<lightning-button slot="actions" label={labels.loadMore.label} onclick={loadMoreAccounts}></lightning-button>-->
 
                                     <div style="height: 600px;">
                                         <lightning-datatable key-field="Id"
                                                     data={availableAccounts}
                                                     columns={accountColumns}
-                                                    enable-infinite-loading
                                                     onrowselection={handleAvailableAccountsSelected}>
                                         </lightning-datatable>
 

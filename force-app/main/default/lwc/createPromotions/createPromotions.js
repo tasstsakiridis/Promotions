@@ -1,16 +1,23 @@
-import { LightningElement, api, wire } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
+import { getPicklistValuesByRecordType } from 'lightning/uiObjectInfoApi';
+
+import LOCALE from "@salesforce/i18n/locale";
+
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 
 import createPromotions from '@salesforce/apex/CreatePromotions_Controller.createPromotions';
 import getUserDetails from '@salesforce/apex/CreatePromotions_Controller.getUserDetails';
 import getActivities from '@salesforce/apex/CreatePromotions_Controller.getActivities';
+import getCities from '@salesforce/apex/CreatePromotions_Controller.getCities';
 import getAccounts from '@salesforce/apex/CreatePromotions_Controller.getAccounts';
 import getProducts from '@salesforce/apex/CreatePromotions_Controller.getProducts';
 import getPromotions from '@salesforce/apex/CreatePromotions_Controller.getPromotions';
 import getPromotionDetails from '@salesforce/apex/CreatePromotions_Controller.getPromotionDetails';
 import updatePromotions from '@salesforce/apex/CreatePromotions_Controller.updatePromotions';
 import createActual from '@salesforce/apex/CreatePromotions_Controller.createActual';
+
+import OBJECT_ACCOUNT from '@salesforce/schema/Account';
 
 import LABEL_ACCOUNT from '@salesforce/label/c.Account';
 import LABEL_ACCOUNTS from '@salesforce/label/c.Accounts';
@@ -50,18 +57,22 @@ import LABEL_JULY from '@salesforce/label/c.July';
 import LABEL_JUNE from '@salesforce/label/c.June';
 import LABEL_MARCH from '@salesforce/label/c.March';
 import LABEL_MAY from '@salesforce/label/c.May';
+import LABEL_MONTH from '@salesforce/label/c.Month';
 import LABEL_MY_PROMOTIONS from '@salesforce/label/c.My_Promotions';
 import LABEL_NEXT from '@salesforce/label/c.Next';
 import LABEL_NOVEMBER from '@salesforce/label/c.November';
 import LABEL_OCTOBER from '@salesforce/label/c.October';
 import LABEL_PACK_QUANTITY from '@salesforce/label/c.PackQty';
+import LABEL_PAGE from '@salesforce/label/c.Page';
+import LABEL_PAGES from '@salesforce/label/c.Pages';
+import LABEL_PERIOD from '@salesforce/label/c.Period';
 import LABEL_PLAN_QTY from '@salesforce/label/c.Plan_Qty';
 import LABEL_PREV from '@salesforce/label/c.PrevAbbrev';
 import LABEL_PRODUCT from '@salesforce/label/c.Product';
 import LABEL_PRODUCTS from '@salesforce/label/c.Products';
 import LABEL_PROMOTION from '@salesforce/label/c.Promotion';
 import LABEL_PROMOTIONS from '@salesforce/label/c.Promotions';
-import LABEL_REBATE from '@salesforce/label/c.Rebate';
+import LABEL_REBATE_PER_CASE from '@salesforce/label/c.Rebate_Per_Case';
 import LABEL_RECORDTYPE from '@salesforce/label/c.RecordType';
 import LABEL_RECORDTYPES from '@salesforce/label/c.RecordTypes';
 import LABEL_REMOVE from '@salesforce/label/c.Remove';
@@ -97,7 +108,8 @@ const ACTIVITY_TABLE_COLUMNS = [
 const ACCOUNT_TABLE_COLUMNS = [
     { label: LABEL_ACCOUNT, fieldName: 'Name' },
     { label: LABEL_ADDRESS, fieldName: 'ShippingStreet' },
-    { label: LABEL_CITY, fieldName: 'ShippingCity' }
+    { label: LABEL_CITY, fieldName: 'City__c' },
+    { label: 'Area', fieldName: 'Area__c' }
 ];
 
 const SELECTED_ACCOUNT_TABLE_COLUMNS = [
@@ -122,21 +134,24 @@ const SELECTED_PRODUCT_TABLE_COLUMNS = [
 ];
 const PRODUCT_INPUT_COLUMNS = [
     { label: LABEL_PRODUCT, fieldName: 'name' },
+    { label: LABEL_PERIOD, fieldName: 'periodName', editable: false },
     { label: LABEL_BOTTLES, fieldName: 'casesBottles', type: 'boolean', editable: true },
     { label: LABEL_PLAN_QTY, fieldName: 'planQty', type: 'number', editable: true, typeAttributes: { minimumIntegerDigits: 1, maximumFractionDigits: 0 } },
-    { label: LABEL_REBATE, fieldName: 'planRebate', type: 'currency', editable: true, typeAttributes: { minimumIntegerDigits: 1, maximumFractionDigits: 2 } },
+    { label: LABEL_REBATE_PER_CASE, fieldName: 'planRebate', type: 'currency', editable: true, typeAttributes: { minimumIntegerDigits: 1, maximumFractionDigits: 2 } },
 ];
 const PRODUCT_UPDATE_ACTIONS = [
     { label: LABEL_CREATE_NEW, name: "create_new" }
 ];
 
 const PRODUCT_UPDATE_COLUMNS = [
-    { label: LABEL_PRODUCT, fieldName: 'productName', label: LABEL_PRODUCT, sortOrder: -2 },
+    { label: LABEL_PRODUCT, fieldName: 'productName', sortOrder: -2 },
     { label: LABEL_BOTTLES, fieldName: 'casesBottles', type: 'boolean', sortOrder: -1 },
     { label: LABEL_PLAN_QTY, fieldName: 'planQty', type: 'number', editable: true, typeAttributes: { minimumIntegerDigits: 1, maximumFractionDigits: 0 } },
-    { label: LABEL_REBATE, fieldName: 'planRebate', type: 'currency', editable: true, typeAttributes: { minimumIntegerDigits: 1, maximumFractionDigits: 2 } },
+    { label: LABEL_REBATE_PER_CASE, fieldName: 'planRebate', type: 'currency', editable: true, typeAttributes: { minimumIntegerDigits: 1, maximumFractionDigits: 2 } },
     { type: 'action', typeAttributes: { rowActions: PRODUCT_UPDATE_ACTIONS }},
 ];
+
+const ACCOUNT_OFFSET = 500;
 
 export default class CreatePromotions extends LightningElement {
     labels ={
@@ -147,6 +162,7 @@ export default class CreatePromotions extends LightningElement {
         addSelected: { label: LABEL_ADD_SELECTED },
         all:        { label: LABEL_ALL },
         allPromotions: { label: LABEL_ALL + ' ' + LABEL_PROMOTIONS },
+        area:       { label: 'area', labelPlural: 'areas' },
         available:  { label: LABEL_AVAILABLE },
         back:       { label: LABEL_BACK },
         bottles:    { label: LABEL_BOTTLES },
@@ -164,6 +180,7 @@ export default class CreatePromotions extends LightningElement {
         loadMore:   { label: 'Load More Accounts' },
         myPromotions: { label: LABEL_MY_PROMOTIONS },   
         next:       { label: LABEL_NEXT },
+        page:       { label: LABEL_PAGE.toLowerCase(), labelPlural: LABEL_PAGES.toLowerCase() },
         prev:       { label: LABEL_PREV },
         products:   { label: 'product', labelPlural: 'products', title: 'Select products' },
         promotion:  { label: 'promotion', labelPlural: 'promotions' },
@@ -200,6 +217,12 @@ export default class CreatePromotions extends LightningElement {
 
     @api 
     viewtype = 'create';
+
+    @track
+    showAccountPrevPageButton = false;
+
+    @track 
+    showAccountNextPageButton = false;
 
     currentPage = 1;
     currentStep = 'actions';
@@ -252,6 +275,21 @@ export default class CreatePromotions extends LightningElement {
         return this.isCollapsed ? this.labels.expandAll.label : this.labels.collapseAll.label;
     }
 
+    get accountPageSummary() {
+        return `${this.totalNumberOfAccounts} ${this.labels.accounts.labelPlural}, ${this.labels.page.label} ${this.currentAccountPageNumber} / ${this.totalAccountPages} ${this.labels.page.labelPlural}`;
+    }
+    get currentAccountPageNumber() {
+        return this.currentAccountPage + 1;
+    }
+    get firstPeriodName() {
+        let name = '';
+        if (this.selectedActivity != undefined && this.selectedActivity.Begin_Date__c != undefined) {
+            name = new Date(this.selectedActivity.Begin_Date__c).toLocaleString(LOCALE, { month: 'long', year: 'numeric' });
+        }
+
+        return name;
+    }
+
     error;
     user;
     market;
@@ -268,6 +306,10 @@ export default class CreatePromotions extends LightningElement {
     isFiltering = false;
     disableUpdateCasesBottles = true;
 
+    currentAccountPage = 0;
+    totalNumberOfAccounts = 0;
+    totalAccountPages = 0;
+
     plannedAccountData = [];
     draftValues = [];
     expandedRows = [];
@@ -277,13 +319,22 @@ export default class CreatePromotions extends LightningElement {
     updatePlanQty;
     updatePlanRebate;
     updateCasesBottles;
+
+    accountRecordTypeId;
+    cityOptions;
+    areaOptions;
+    selectedCity;
+    selectedArea;
     
     periods = [];
 
-    /*
+    
     connectedCallback() {
         if (this.isConnected) { return; }
 
+        this.isConnected = true;
+        this.isWorking = true;
+        /*
         getUserDetails()
         .then(result => {
             this.user = result.user;
@@ -298,8 +349,9 @@ export default class CreatePromotions extends LightningElement {
             this.user = undefined;
             this.market = undefined;
         });
+        */
     }
-    */
+    
     channel;
     channelOptions;
 
@@ -308,6 +360,7 @@ export default class CreatePromotions extends LightningElement {
     @wire(getUserDetails, {})
     wiredUser({error, data}) {
         if (data) {
+            this.isWorking = true;
             console.log('[getUserDetails] result', data);
 
             this.error = undefined;
@@ -325,15 +378,45 @@ export default class CreatePromotions extends LightningElement {
             this.labels.products.labelPlural = data.objProduct.labelPlural;
             this.labels.accounts.label = data.objAccount.label;
             this.labels.accounts.labelPlural = data.objAccount.labelPlural;
+            this.labels.area.label = data.objAccount.fields['Area__c'].label;
+            this.labels.area.labelPlural = data.objAccount.fields['Area__c'].labelPlural;
+            this.labels.cities.label = data.objAccount.fields['City__c'].label;
+            this.labels.cities.labelPlural = data.objAccount.fields['City__c'].labelPlural;
 
+            this.accountColumns[2].label = this.labels.cities.label;
+            this.accountColumns[3].label = this.labels.area.label;
+
+            this.loadCityList = true;
+
+            this.accountRecordTypeId = data.objAccount.recordTypes['INR - Outlets'].value;
             //this.getExistingPromotions();
             this.getAvailableActivities();
+            //this.getAccountCities();
             this.getAvailableAccounts();
             this.getAvailableProducts();
         } else if (error) {
             this.error = error;
             this.user = undefined;
             this.market = undefined;            
+        }
+    }
+
+    picklistValuesMap;
+    allCities;
+    allAreas;
+
+    @wire(getPicklistValuesByRecordType, {
+        objectApiName: OBJECT_ACCOUNT,
+        recordTypeId: '$accountRecordTypeId'
+    })
+    wiredAccountPicklistValues({ error, data }) {
+        if (data) {
+            this.error = undefined;
+            this.picklistValuesMap = data.picklistFieldValues;
+            this.setFieldOptions(data.picklistFieldValues);
+        } else if (error) {
+            this.error = error;
+            this.cities = undefined;
         }
     }
 
@@ -416,6 +499,7 @@ export default class CreatePromotions extends LightningElement {
         });
     }
 
+    loadCityList = false;
     accountNameFilter = '';
     cities = [];
     accounts = [];
@@ -423,63 +507,81 @@ export default class CreatePromotions extends LightningElement {
     selectedAccounts = [];
     accountsToAdd = [];
     accountsToRemove = [];
+
+    /*
+    getAccountCities() {
+        getCities({
+            userId: this.user.Id,
+            marketId: this.market.Id
+        })
+        .then(result => {
+            let accountCities = [];
+            result.forEach(c => {
+                if (c.ShippingCity != undefined) {
+                    accountCities.push({ 'label': c.ShippingCity, 'value': c.ShippingCity });
+                }
+            });
+
+            console.log('[getAvailableAccounts] accountCities', accountCities);
+            accountCities.sort(function(a, b) {
+                let x = a.label.toLowerCase();
+                let y = b.label.toLowerCase();
+                if (x < y) { return -1; }
+                if (x > y) { return 1; }
+                return 0; 
+            });
+            accountCities.splice(0, 0, { label: this.labels.all.label, value: 'all' });
+            this.cities = [...accountCities];
+        })
+        .catch(error => {
+            this.error = error;
+            this.cities = [];
+        });
+    }
+    */
     /*  Accounts  */
     getAvailableAccounts() {
         console.log('[getAvailableAccounts] accountNameFilter', this.accountNameFilter);
         console.log('[getAvailableAccounts] selectedCity', this.selectedCity);
+        console.log('[getAvailableAccounts] selectedArea', this.selectedArea);
+
+        this.isWorking = true;
 
         getAccounts({
             userId: this.user.Id,
             marketId: this.market.Id,
             offset: this.accountOffsetCount,
             accountNameFilter: this.accountNameFilter,
-            cityFilter: this.selectedCity
+            cityFilter: this.selectedCity,
+            areaFilter: this.selectedArea
         })
         .then(result => {
-            console.log('[getAvailableAccounts] accounts', result);
-            this.accounts = result;
-            let accountList = this.availableAccounts;
-            
-            let accountCities = [];
+            console.log('[getAvailableAccounts] result', result);
+            this.totalNumberOfAccounts = result.numberOfAccounts;
+            this.totalAccountPages = result.numberOfAccounts == undefined ? 0 : Math.ceil(result.numberOfAccounts / ACCOUNT_OFFSET);
+            this.accounts = result.accounts;  
+            this.showAccountPrevPageButton = this.currentAccountPageNumber > 1;
+            this.showAccountNextPageButton = this.totalAccountPages > 1 && this.currentAccountPageNumber < this.totalAccountPages;
+
             try {
-                this.accounts.forEach(a => {
-                    let city = a.ShippingCity == undefined || a.ShippingCity == '' ? '' : a.ShippingCity;
-
-                    if (accountCities.findIndex(c => c.value == city) < 0) (
-                        accountCities.push({'label': city, 'value': city })
-                    )
-                });
-                accountCities.sort(function(a, b) {
-                    let x = a.label.toLowerCase();
-                    let y = b.label.toLowerCase();
-                    if (x < y) { return -1; }
-                    if (x > y) { return 1; }
-                    return 0; 
-                });
-                accountCities.splice(0, 0, { label: this.labels.all.label, value: 'all' });
-                this.cities = [...accountCities];
-
-                if (this.isFiltering) {
-                    accountList = [...this.accounts];
-                } else {
-                    accountList = accountList.concat(this.accounts);
-                }
                 
-                this.availableAccounts = [...accountList];
+                this.availableAccounts = [...result.accounts];
                 this.isGettingAccounts = false;
                 this.isFiltering = false;
                 if (this.targetDataTable) {
                     this.targetDataTable.isLoading = false;
                 }
                 this.isWorking = this.isGettingAccounts && this.isGettingActivities && this.isGettingProducts && this.isGettingPromotions;
-            } catch(ex) {
+            } catch(ex) {                
                 console.log('[getAccounts] exception', ex);
             }
         })
         .catch(error => {
+            console.log('[getAvailableAccounts] error', error);
             this.error = error;
             this.accounts = [];
             this.availableAccounts = [];
+            this.isWorking = false;
         });
     }
 
@@ -489,10 +591,10 @@ export default class CreatePromotions extends LightningElement {
             //event.target.isLoading = true;
             this.isWorking = true;
             this.loadMoreAccountStatus = 'Loading';
-            this.accountOffsetCount += 100;
+            this.accountOffsetCount = this.currentAccountPage * ACCOUNT_OFFSET;
             //this.targetDataTable = event.target;
         }catch(ex) {
-            console.log('[loadMoreAccounts] exception', ex);
+            console.log('[loadMoreAccounts] exception', ex);            
         }
         this.getAvailableAccounts();
     }
@@ -591,7 +693,7 @@ export default class CreatePromotions extends LightningElement {
             } catch(ex) {
                 console.log('[getProducts] exception', ex);
             }
-            this.isGettingProducts = true;
+            this.isGettingProducts = false;
             this.isWorking = this.isGettingAccounts && this.isGettingActivities && this.isGettingProducts && this.isGettingPromotions;
         })
         .catch(error => {
@@ -620,6 +722,7 @@ export default class CreatePromotions extends LightningElement {
     moveToNextPage() {
         this.currentPage++;
         this.currentStep = this.steps[this.currentPage-1];
+        console.log('[moveToNextPage] currentStep', this.currentStep);
         if (this.currentStep == 'summary') {
             this.buildPlannedAccountData();
         }
@@ -659,6 +762,7 @@ export default class CreatePromotions extends LightningElement {
     }
     handleActivitySelected(event) {
         try {
+            
         console.log('[handleActivitySelected] target', event.currentTarget);
         console.log('[handleActivitySelected] target.attributes', JSON.parse(JSON.stringify(event.currentTarget.dataset)));
             if (event.currentTarget.dataset.key){
@@ -907,10 +1011,11 @@ export default class CreatePromotions extends LightningElement {
 
         this.currentPage = 1;
         this.currentStep = this.steps[0];
+        this.currentAccountPage = 1;
     }
 
     buildPlannedAccountData() {
-        let data = [];
+        let data = [];        
         this.selectedAccounts.forEach(a => {
             let account = {
                 "id": a.Id,
@@ -928,6 +1033,7 @@ export default class CreatePromotions extends LightningElement {
                     "id": a.Id+"-"+p.Id,
                     "productId": p.Id,
                     "name": p.Name,
+                    "periodName": this.firstPeriodName,
                     "casesBottles": false,
                     "planQty": 0,
                     "planRebate": 0,
@@ -939,6 +1045,7 @@ export default class CreatePromotions extends LightningElement {
         });
 
         this.plannedAccountData = [...data];
+        console.log('[buildPlannedAccountData] plannedAccountData', this.plannedAccountData);
     }
     getPeriodName(periodDate, periodIndex) {
         const d = new Date(periodDate);
@@ -1379,8 +1486,32 @@ export default class CreatePromotions extends LightningElement {
         this.getAvailableAccounts();
     }
     handleAccountCityChange(event) {
-        this.selectedCity = event.detail.value;
-        this.filterAccounts();
+        this.selectedCity = event.detail.value == 'all' ? '' : event.detail.value;
+        if (this.selectedCity == '') {
+            this.areaOptions = [...this.allAreas];
+        } else {
+            try {
+            let controllerValue = this.picklistValuesMap.Area__c.controllerValues[this.selectedCity];
+            console.log('controllerValue: ', controllerValue);
+            let areasForCity = this.picklistValuesMap.Area__c.values.filter(a => a.validFor.indexOf(controllerValue) >= 0);
+            let l = areasForCity.map(a => {
+                return { label: a.label, value: a.value, selected: false }
+            });
+            
+            this.areaOptions = [...l];
+            }catch(ex) {
+                console.log('[handleCityChange] exception', ex);
+            }
+        }
+
+        this.currentAccountPage = 0;
+        this.getAvailableAccounts();
+    }
+
+    handleAccountAreaChange(event) {
+        this.selectedArea = event.detail.value == 'all' ? '' : event.detail.value;
+        this.currentAccountPage = 0;
+        this.getAvailableAccounts();
     }
 
     filterAccounts() {
@@ -1404,6 +1535,28 @@ export default class CreatePromotions extends LightningElement {
         }
     }
 
+    prevAccountPage() {
+        this.currentAccountPage--;
+        if (this.currentAccountPage < 0) { 
+            this.currentAccountPage = 0; 
+            this.showAccountPrevPageButton = false;
+        }
+        this.showAccountNextPageButton = true;
+
+        this.loadMoreAccounts();
+    }
+    nextAccountPage() {
+        this.currentAccountPage++;
+        if (this.currentAccountPage >= this.totalAccountPages) { 
+            this.currentAccountPage = this.totalAccountPages; 
+            this.showAccountNextPageButton = false;
+        }
+
+        this.showAccountPrevPageButton = true;
+
+        this.loadMoreAccounts();
+    }
+
     buildPromotions(event) {
         this.isWorking = true;
         if (this.isCreatingNewPromotions) {
@@ -1416,10 +1569,7 @@ export default class CreatePromotions extends LightningElement {
         const promotions = [];   
         console.log('[createPromotionsService] plannedAccountData', this.plannedAccountData);     
         this.plannedAccountData.forEach(pad => {
-            let name = pad.account.Name;
-            if ((name + '_' + this.selectedActivity.Name).length > 80) {
-                name = pad.account.Name.substring(0, 50) + '_' + this.selectedActivity.Name.substring(0, 30);
-            }
+            let name = pad.account.Name.substring(0, 49) + '_' + this.selectedActivity.Name.substring(0, 30);
             let promotion = {
                 id: null,
                 name: name,
@@ -1568,6 +1718,34 @@ export default class CreatePromotions extends LightningElement {
             this.error = error;
             console.log('[updatePromotions] exception', error);
         });
+    }
+
+    setFieldOptions(picklistValues) {
+        console.log('[setFieldOptions] picklistValues', picklistValues);
+        let c;
+        Object.keys(picklistValues).forEach(picklist => {            
+            if (picklist === 'City__c') {
+                c = this.setFieldOptionsForField(picklistValues, picklist);
+                c.splice(0, 0, {'label':this.labels.all.label, 'value':'all'});
+                this.cityOptions = [...c];
+            } else if (picklist === 'Area__c') {
+                c = this.setFieldOptionsForField(picklistValues, picklist);
+                c.splice(0, 0, {'label':this.labels.all.label, 'value':'all'});
+                this.areaOptions = [...c];
+            }
+        });  
+        
+        this.allCities = this.cityOptions;
+        this.allAreas = this.areaOptions;
+    }
+    
+    setFieldOptionsForField(picklistValues, picklist) {        
+        console.log('[setFieldOptionsForField] picklist field', picklist);
+        return picklistValues[picklist].values.map(item => ({
+            label: item.label,
+            value: item.value,
+            selected: false
+        }));
     }
 
     showToast(type, title, message) {

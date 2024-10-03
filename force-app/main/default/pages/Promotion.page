@@ -484,8 +484,12 @@
                     if (value.fieldPath.indexOf('__r') < 0) {
                         requiredHTML = '';
                         if (value.required || value.dbRequired) {
-                            requiredHTML = ' requiredField';
-                            requiredFields.push(value.fieldPath);
+                            if (marketName == 'Australia' && value.fieldPath == 'Additional_Mechanics__c' && headerInfo.Created_By_System__c == true) {
+                                requiredHTML = '';
+                            } else {
+                                requiredHTML = ' requiredField';
+                                requiredFields.push(value.fieldPath);
+                            }
                         }
                         thisSectionHTML += '<dt class="dtField"><div><p class="'+requiredHTML+'">'+value.label+'</p><p class="'+value.fieldPath+'"></p></div></dt><dd class="ddField">'+buildInput(value, headerInfo, 'header')+'</dd>';
                     }
@@ -567,7 +571,7 @@
                     break;
                 case 'checkbox':
                     if(isReadOnly == true){
-                        html += '<input id="'+obj.fieldPath+'" field="'+obj.fieldPath+'" type="'+inputTypeMap[obj.type]+'" disabled="disabled" class="fieldInput cmn-toggle cmn-toggle-round-flat"/>';
+                        html += '<input id="'+obj.fieldPath+'" field="'+obj.fieldPath+'" type="'+inputTypeMap[obj.type]+'" disabled="disabled" class="fieldInput cmn-toggle cmn-toggle-round-flat" ' + (value == true ? ' checked="checked"' : '') + '/>';
                         html += '<label for="'+obj.fieldPath+'" class="'+section+'Checkbox"></label>';
                     }else{
                         if(value == true){
@@ -810,7 +814,9 @@
             var errormessage = '';
             for(var i = 0; i < requiredFields.length; i++) {
                 if (promotion[requiredFields[i]] == null || promotion[requiredFields[i]] == '') {
-                    errormessage += requiredFields[i] + ', ';
+                    if (marketName != 'Australia' || (marketName == 'Australia' && requiredFields[i] == 'Additional_Mechanics__c' && !headerInfo.Created_By_System__c)) {
+                        errormessage += requiredFields[i] + ', ';
+                    }
                 }
             }
             if (errormessage.length > 0) {

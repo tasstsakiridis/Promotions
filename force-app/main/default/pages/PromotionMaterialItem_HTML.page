@@ -1149,6 +1149,9 @@ console.log('product', product);
                                 }
                             } else {
                                 pmi[fldName] = fld.val();
+                                if (fld.attr('type') == 'number' && pmi[fldName] == '') {
+                                    pmi[fldName] = 0;
+                                } 
                             }
                         } else if (fld.is('textarea')) {
                             pmi[fldName] = fld.val();

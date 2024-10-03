@@ -152,4 +152,12 @@
         <shortDescription>Plan Qty</shortDescription>
         <value>Plan Qty</value>
     </labels>
+    <labels>
+        <fullName>Rebate_Per_Case</fullName>
+        <categories>labels</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Rebate per Case</shortDescription>
+        <value>Rebate per Case</value>
+    </labels>
 </CustomLabels>

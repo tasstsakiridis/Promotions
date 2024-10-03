@@ -72,8 +72,11 @@ private class CreatePromotions_Controller_Test {
             List<Product__c> availableProducts = CreatePromotions_Controller.getProducts(market.Id, user1.Id, 'On');
             System.assertNotEquals(0, availableProducts.size(), 'number of Products dont match');
 
-            List<Account> availableAccounts = CreatePromotions_Controller.getAccounts(market.Id, user1.Id, 0, 'India', 'India');
-            System.assertNotEquals(0, availableAccounts.size(), 'number of Accounts dont match');
+            Map<String, Object> availableAccounts = CreatePromotions_Controller.getAccounts(user1.Id, market.Id, 0, 'India', 'India', '');
+
+            List<AggregateResult> cities = CreatePromotions_Controller.getCities(user1.Id, market.Id);
+            System.assertNotEquals(0, cities.size(), 'number of Cities dont match');
+
 
             CreatePromotions_Controller.PromotionItemData pid = new CreatePromotions_Controller.PromotionItemData();
             pid.id = null;
@@ -86,6 +89,7 @@ private class CreatePromotions_Controller_Test {
 
             CreatePromotions_Controller.PromotionData pd = new CreatePromotions_Controller.PromotionData();
             pd.id = null;
+            pd.name = 'Test Promotion';
             pd.activityId = activity1.Id;
             pd.accountId = account1.Id;
             pd.startDate = '2023-01-01';

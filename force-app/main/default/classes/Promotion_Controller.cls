@@ -93,7 +93,7 @@ global with sharing class Promotion_Controller {
 			promotionType = thisPromotion.RecordType.Name;
             newPromotion = false;
         } else {
-            thisPromotion = new Promotion__c(RecordTypeId=recordTypeId,Account__c=accountId,Status__c='New',Approval_Status__c='New');
+            thisPromotion = new Promotion__c(RecordTypeId=recordTypeId,Account__c=accountId,Status__c='New',Approval_Status__c='New',Promotion_Status__c='Planned');
             newPromotion = true;
             	
             System.debug('[PromotionController.building new promotion] record TypeId: ' + recordTypeId);
@@ -294,13 +294,13 @@ global with sharing class Promotion_Controller {
                                                            WHERE Activity__c =:p.Promotion_Activity__c];
 
             if (activityProducts != null && activityProducts.size() > 0) {
-                List<Promotion_Material_Item__c> existingItems = [SELECT Id, Product__c FROM Promotion_Material_Item__c WHERE Promotion__c =:p.Id];
+                List<Promotion_Material_Item__c> existingItems = [SELECT Id, Product_Custom__c FROM Promotion_Material_Item__c WHERE Promotion__c =:p.Id];
                 List<Promotion_Material_Item__c> newItems = new List<Promotion_Material_Item__c>();
                 Boolean found = false;
                 for(Activity_Product__c ap : activityProducts) {
                     found = false;
                     for(Promotion_Material_Item__c epmi : existingItems) {
-                        if (epmi.Product__c == ap.Product_NoFilter__c) {
+                        if (epmi.Product_Custom__c == ap.Product_NoFilter__c) {
                             found = true; break;
                         }
                     }
