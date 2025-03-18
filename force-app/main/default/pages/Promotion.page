@@ -292,6 +292,12 @@
             
 	        generateOptionsMenu();
             
+            if (marketName == 'Australia') {
+                j$('.transfer').show();
+            } else {
+                j$('.transfer').hide();
+            }
+
             if (newPromotion == false) {
                 promotionId = headerInfo.Id;
             }
@@ -381,6 +387,22 @@
                 try {
 	                var rUrl = urlPrefix + '/apex/Promotion?promotionType='+promotionType+'&recordTypeId='+recordTypeId+'&accountId='+thisAccountId+'&callcardId='+callCardId+'&id=' + promotionId+'&retUrl='+returnURL;
     	            var newUrl = urlPrefix + '/apex/PromotionMaterialItem_HTML?id='+promotionId+'&fromAccountsNearby=true&retUrl='+returnURL;
+                    //alert('additem clicked. inSF1: ' + inSF1 + ', newUrl: ' + newUrl);
+                     if (inSF1) {
+                         sforce.one.navigateToURL(newUrl);
+                     } else {
+		                window.location.href = newUrl;
+                     }
+                }
+                catch(err) {
+                    console.log('error: ' + err.message);
+                }
+            });
+            j$('.transfer').click(function(){
+                try {
+                    returnURL = urlPrefix + '/apex/Account_Visit?id=' + thisAccountId;
+	                var rUrl = urlPrefix + '/apex/Promotion?id=' + promotionId+'&retUrl='+returnURL;
+    	            var newUrl = urlPrefix + '/apex/TransferPromotion?id='+promotionId+'&retUrl='+returnURL;
                     //alert('additem clicked. inSF1: ' + inSF1 + ', newUrl: ' + newUrl);
                      if (inSF1) {
                          sforce.one.navigateToURL(newUrl);
@@ -1013,6 +1035,7 @@
                 <button type="button" value="{!$Label.Upload_and_Attach}" class="btn button actionButton uploadItems bg-primary" data-role="none" disabled="disabled">{!$Label.Upload_and_Attach}</button>
                 <button type="button" value="{!$Label.Send_Notification}" class="btn button actionButton send-notification bg-primary" data-role="none">{!$Label.Send_Notification}</button>
                 <button type="button" value="{!$Label.Add_Edit_Items}" class="btn button actionButton addItems bg-primary" data-role="none" disabled="disabled">{!$Label.Add_Edit_Items}</button>
+                <button type="button" value="{!$Label.Transfer}" class="btn button actionButton transfer bg-primary" data-role="none" >{!$Label.Transfer}</button>
                 <div id="savedMessage" class="savedMessage" style="display:none">
                     {!$Label.Saved}
                     <apex:pagemessages id="messages"/>
@@ -1047,6 +1070,7 @@
                 <button type="button" value="{!$Label.Upload_and_Attach}" class="btn button actionButton uploadItems bg-primary" data-role="none" disabled="disabled">{!$Label.Upload_and_Attach}</button>
                 <button type="button" value="{!$Label.Send_Notification}" class="btn button actionButton send-notification bg-primary" data-role="none">{!$Label.Send_Notification}</button>
                 <button type="button" value="{!$Label.Add_Edit_Items}" class="btn button actionButton addItems bg-primary" data-role="none" disabled="disabled">{!$Label.Add_Edit_Items}</button>
+                <button type="button" value="{!$Label.Transfer}" class="btn button actionButton transfer bg-primary" data-role="none" >{!$Label.Transfer}</button>
                 <div class="loadingImage" style="display:none">
                     <img src="{!URLFOR($Resource.SFA, '/img/transparentLoading.gif')}"/>
                 </div>

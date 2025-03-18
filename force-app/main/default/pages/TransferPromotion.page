@@ -1,0 +1,5 @@
+<apex:page standardController="Promotion__c" extensions="TransferPromotion_Controller">
+    <flow:interview name="AU_Transfer_Promotion" finishLocation="{!returnUrl}">
+        <apex:param name="recordId" value="{!$CurrentPage.Parameters.id}" />
+    </flow:interview>
+</apex:page>
