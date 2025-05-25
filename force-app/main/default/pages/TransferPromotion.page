@@ -1,5 +1,49 @@
 <apex:page standardController="Promotion__c" extensions="TransferPromotion_Controller">
+	<html>
+    	<head>
+        	<apex:includeLightning />
+    	</head>
+    </html>
+    <!--
     <flow:interview name="AU_Transfer_Promotion" finishLocation="{!returnUrl}">
         <apex:param name="recordId" value="{!$CurrentPage.Parameters.id}" />
     </flow:interview>
+-->
+    <body class="slds-scope">
+        <div id="flowContainer">
+            <script>
+            	let inSF1 = false;
+                if( (typeof sforce != 'undefined') && (sforce.one != null) ) {
+                    inSF1 = true;
+                }else{
+                    inSF1 = false;
+                }            
+            	let returnUrl = "{!$CurrentPage.Parameters.retUrl}";
+            	var statusChange = function(event) {
+                    if (event.getParam("status") === "FINISHED") {
+                    	if (inSF1) {
+                            sforce.one.navigateToURL(returnUrl);
+                        } else {
+                           window.location.href = returnUrl;
+                       }
+                    }
+                    
+                };
+            	$Lightning.use("c:TransferPromotion", function() {
+                    $Lightning.createComponent("lightning:flow", { "onstatuschange" : statusChange },
+                                               "flowContainer",
+                                               function(component) {
+                                                   var inputVariables = [
+                                                       {
+                                                           name: "recordId",
+                                                           type: "String",
+                                                           value: "{!$CurrentPage.Parameters.id}"
+                                                       }
+                                                   ];
+                                                   component.startFlow("AU_Transfer_Promotion", inputVariables);
+                                               });
+                    });
+            </script>
+        </div>        
+    </body>
 </apex:page>
