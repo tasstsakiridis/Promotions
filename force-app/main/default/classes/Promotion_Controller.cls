@@ -24,6 +24,8 @@ global with sharing class Promotion_Controller {
     public String accountGroup                              { get; set; }
     public String accountSubgroup                           { get; set; }
     public String accountSubgroupType                       { get; set; }
+    public String subBannerGroup                            { get; set; }
+    public String subBannerGroupName                        { get; set; }
     public String marketId 									{ get; set; }
     public String marketName								{ get; set; }
 	public String fieldSetName								{ get; set; }
@@ -75,7 +77,7 @@ global with sharing class Promotion_Controller {
             accountSubgroup = thisCallCard.Account__r.SubGroup__c;
             accountSubgroupType = thisCallCard.Account__r.Subgroup_Type__c;
         }
-        thisAccount = [SELECT Id, Name, Channel__c, Store_Type__c, Market__c, Market__r.Name, Market__r.Country__c, Group__c, SubGroup__c, Subgroup_Type__c FROM Account WHERE Id = :accountId];
+        thisAccount = [SELECT Id, Name, Channel__c, Store_Type__c, Market__c, Market__r.Name, Market__r.Country__c, Group__c, SubGroup__c, Subgroup_Type__c, Sub_Banner_Group__c, Sub_Banner_Group__r.Name FROM Account WHERE Id = :accountId];
         accountName = thisAccount.Name;
         channel = thisAccount.Channel__c;
         storeType = thisAccount.Store_Type__c;
@@ -85,6 +87,8 @@ global with sharing class Promotion_Controller {
         accountGroup = thisAccount.Group__c;
         accountSubgroup = thisAccount.SubGroup__c;
         accountSubgroupType = thisAccount.Subgroup_Type__c;
+        subBannerGroup = thisAccount.Sub_Banner_Group__c;
+        subBannerGroupName = thisAccount.Sub_Banner_Group__c == null ? '' : thisAccount.Sub_Banner_Group__r.Name;
         serializedAccount = JSON.serialize(thisAccount);
                 
         if (promoId != null && promoId != '') {
@@ -174,7 +178,7 @@ global with sharing class Promotion_Controller {
                 relationships.add(new RelationshipWrapper('Venue__c', 'Venue__c', 'account', 'WHERE Account__c = \'' + String.escapeSingleQuotes(accountId) + '\' AND Is_Active__c=true'));            
             } else {
                 relationships.add(new RelationshipWrapper('Venue__c', 'Venue__c', 'account', 'WHERE Account__c = \'' + String.escapeSingleQuotes(accountId) + '\' AND Is_Active__c=true AND Channel__c=\'' + String.escapeSingleQuotes(channel) + '\''));            
-            }            
+            }    
         }
         if (marketName == 'Poland') {
         	relationships.add(new RelationshipWrapper('Local_POS_Type_PL__c', 'Product__c', 'product', 'WHERE For_Promotion_PL__c = \'BudExpo\' AND IsActive__c=true AND Market__c=\''+String.escapeSingleQuotes(marketId)+'\''));    

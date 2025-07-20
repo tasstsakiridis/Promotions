@@ -182,6 +182,7 @@
         var accountGroup = "{!accountGroup}";
         var accountSubgroup = "{!accountSubgroup}";
         var accountSubgroupType = "{!accountSubgroupType}";
+        var subBannerGroup = "{!subBannerGroup}";
         console.log('channel', accountChannel);
         console.log('group', accountGroup);
         console.log('subgroup', accountSubgroup);
@@ -796,6 +797,9 @@
             promotion.CallCard__c = callCardId;
             promotion.Account__c = headerInfo.Account__c;
             promotion.RecordTypeId = headerInfo.RecordTypeId;
+            if (marketName == 'Australia' && subBannerGroup != undefined) {
+                promotion.Sub_Banner_Group__c = subBannerGroup;
+            }
 
             //loop through each input in the header table and add it's value to our object
             j$('#sectionContent').find('input,select,textarea').each(function(){                
