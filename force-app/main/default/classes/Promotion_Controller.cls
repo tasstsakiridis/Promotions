@@ -216,6 +216,10 @@ global with sharing class Promotion_Controller {
             }
             whereClause += ' AND Wombat_Active__c = true AND Begin_Date__c <= TODAY AND End_Date__c >= TODAY';
         }
+        if (marketName == 'Japan') {
+            if (promotionType == 'JP Agreement') { promoType = 'Agreement'; }
+            if (promotionType == 'JP Sales Promotion') { promoType = 'Sales Promo'; }
+        }
         relationships.add(new RelationshipWrapper('Promotion_Activity_AUD__c', 'Promotion_Activity__c', 'campaign', whereClause));
         
         String promoActivityClause = 'WHERE Active__c = true AND (Market__c = \'' + String.escapeSingleQuotes(marketId) + '\' OR Market_s__c INCLUDES (\'' + marketName + '\')) AND Promotion_Type__c = \'' + String.escapeSingleQuotes(promoType) + '\' AND Begin_Date__c <= today AND End_Date__c >= today';

@@ -366,7 +366,7 @@
         function closePage() {
             var hasAccessToAccountSurvey  = {!$Permission.AccountVisit_AccountSurvey};
             if (hasAccessToAccountSurvey && inSF1 && fromAccountsNearby == 'true') {
-                var rUrl = urlPrefix + '/apex/Promotion?id=' + thisPromotion.Id + '&promotionType='+thisPromotion.RecordType.Name+'&recordTypeId='+thisPromotion.RecordTypeId+'&accountId='+thisPromotion.Account__c+'&callcardId='+thisPromotion.CallCard__c;
+                var rUrl = urlPrefix + '/apex/Promotion?id=' + thisPromotion.Id + '&promotionType='+thisPromotion.RecordType.Name+'&recordTypeId='+thisPromotion.RecordTypeId+'&accountId='+thisPromotion.Account__c+'&callCardId='+thisPromotion.CallCard__c;
                 sforce.one.navigateToURL(rUrl, true);
             } else {
                 if (inSF1) {

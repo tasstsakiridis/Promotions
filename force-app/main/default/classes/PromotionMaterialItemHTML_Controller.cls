@@ -29,7 +29,8 @@ global with sharing class PromotionMaterialItemHTML_Controller {
         
         thisPromotion = [SELECT Id, Name, RecordTypeId, RecordType.Name, Promotion_Start_Date__c, Promotion_End_Date__c, Account__c, AccountName__c, 
                                 Account__r.Channel__c, Account__r.Market__c, Account__r.Market__r.Name, Channel__c, CallCard__c, Status__c, 
-                                Approval_Status__c, Promotion_Type__c, Number_of_Periods__c, Promotion_Activity__c, Promotion_Activity_AUD__c 
+                                Approval_Status__c, Promotion_Type__c, Number_of_Periods__c, Promotion_Activity__c, Promotion_Activity_AUD__c,
+                                Account__r.Market__r.Sort_Products_by_Mandatory_Status__c 
                            FROM Promotion__c 
                           WHERE Id =:controller.getId()];
         
@@ -44,7 +45,7 @@ global with sharing class PromotionMaterialItemHTML_Controller {
         							(SELECT ActorId FROM ProcessInstanceWorkItem 
         								WHERE ProcessInstance.TargetObjectId = :thisPromotion.Id AND ProcessInstance.Status = 'Pending')];
 
-        if(thisPromotion.Status__c == 'New' || thisPromotion.Status__c == '' || marketName == 'Australia'){
+        if(thisPromotion.Status__c == 'New' || thisPromotion.Status__c == '' || marketName == 'Australia' || marketName == 'Japan'){
         	lockPMI = false;
         }else{
         	if(thisPromotion.Status__c == 'Pending'){
@@ -102,24 +103,52 @@ global with sharing class PromotionMaterialItemHTML_Controller {
         if (readOnlyFields == null) { readOnlyFields = new List<String>(); }
         serializedReadOnlyFieldList = JSON.serialize(readOnlyFields);
         
+        String productQuery = 'SELECT Id, Name, ProductCode__c, Pack_Quantity__c, RecordType.Name, Channel__c, Brand__r.Name, Brand__r.Spirit_Type__c, Supplier__c, Unit_Size__c, Used_For__c, Unit_Cost__c';
+        if (thisPromotion.Account__r.Market__r.Sort_Products_by_Mandatory_Status__c) {
+            productQuery += ',(SELECT Id, Custom_Product__c, Product_Status__c FROM Mandatory_Products__r WHERE Account__c = \''+thisPromotion.Account__c+'\')';
+        }
+        productQuery += ' FROM Product__c';
+        productQuery += ' WHERE IsActive__c = true AND Market__c =\'' + thisPromotion.Account__r.Market__c + '\' AND (Channel__c =:productChannel OR Channel__c = \'Both\')';
         if (marketName == 'China') {
 	        String productRecordType = 'Wet Goods';
             if (promotionType == 'Sales Promotion') { 
                 productRecordType = 'Dry Goods'; 
-	            productList = [SELECT Id, Name, ProductCode__c, Pack_Quantity__c, RecordType.Name, Channel__c, Brand__r.Name, Brand__r.Spirit_Type__c, Supplier__c, Unit_Size__c, Used_For__c, Unit_Cost__c FROM Product__c WHERE IsActive__c = true AND Market__c =: thisPromotion.Account__r.Market__c AND (Channel__c =:productChannel OR Channel__c = 'Both') AND RecordType.Name =:productRecordType AND Used_For__c EXCLUDES ('Fee') ORDER BY Name ASC];                            
+	            //productList = [SELECT Id, Name, ProductCode__c, Pack_Quantity__c, RecordType.Name, Channel__c, Brand__r.Name, Brand__r.Spirit_Type__c, Supplier__c, Unit_Size__c, Used_For__c, Unit_Cost__c FROM Product__c WHERE IsActive__c = true AND Market__c =: thisPromotion.Account__r.Market__c AND (Channel__c =:productChannel OR Channel__c = 'Both') AND RecordType.Name =:productRecordType AND Used_For__c EXCLUDES ('Fee') ORDER BY Sort_Order__c, Name ASC];                            
+                productQuery += 'AND RecordType.Name =:productRecordType AND Used_For__c EXCLUDES (\'Fee\')';
             } else {
-	            productList = [SELECT Id, Name, ProductCode__c, Pack_Quantity__c, RecordType.Name, Channel__c, Brand__r.Name, Brand__r.Spirit_Type__c, Supplier__c, Unit_Size__c, Used_For__c, Unit_Cost__c FROM Product__c WHERE IsActive__c = true AND Market__c =: thisPromotion.Account__r.Market__c AND (Channel__c =:productChannel OR Channel__c = 'Both') AND (RecordType.Name =:productRecordType OR Used_For__c INCLUDES ('Fee','Incentive')) ORDER BY Name ASC];                            
+	            //productList = [SELECT Id, Name, ProductCode__c, Pack_Quantity__c, RecordType.Name, Channel__c, Brand__r.Name, Brand__r.Spirit_Type__c, Supplier__c, Unit_Size__c, Used_For__c, Unit_Cost__c FROM Product__c WHERE IsActive__c = true AND Market__c =: thisPromotion.Account__r.Market__c AND (Channel__c =:productChannel OR Channel__c = 'Both') AND (RecordType.Name =:productRecordType OR Used_For__c INCLUDES ('Fee','Incentive')) ORDER BY Sort_Order__c, Name ASC];                            
+                productQuery += 'AND (RecordType.Name =:productRecordType OR Used_For__c INCLUDES (\'Fee\',\'Incentive\'))';
             }
 
         } else if (marketName == 'Poland' || marketName == 'Mexico' || marketName == 'Taiwan' || marketName == 'BeLux') {
-	        productList = [SELECT Id, Name, ProductCode__c, Pack_Quantity__c, RecordType.Name, Channel__c, Brand__r.Name, Brand__r.Spirit_Type__c, Supplier__c, Unit_Size__c, Used_For__c FROM Product__c WHERE IsActive__c = true AND Market__c =: thisPromotion.Account__r.Market__c AND (Channel__c =:productChannel OR Channel__c = 'Both') AND Used_For__c INCLUDES ('Promotion') ORDER BY Name ASC];            
+	        //productList = [SELECT Id, Name, ProductCode__c, Pack_Quantity__c, RecordType.Name, Channel__c, Brand__r.Name, Brand__r.Spirit_Type__c, Supplier__c, Unit_Size__c, Used_For__c FROM Product__c WHERE IsActive__c = true AND Market__c =: thisPromotion.Account__r.Market__c AND (Channel__c =:productChannel OR Channel__c = 'Both') AND Used_For__c INCLUDES ('Promotion') ORDER BY Sort_Order__c, Name ASC];            
+            productQuery += ' AND Used_For__c INCLUDES (\'Promotion\')';
         } else {
-	        productList = [SELECT Id, Name, ProductCode__c, Pack_Quantity__c, RecordType.Name, Channel__c, Brand__r.Name, Brand__r.Spirit_Type__c, Supplier__c, Unit_Size__c, Used_For__c FROM Product__c WHERE IsActive__c = true AND Market__c =: thisPromotion.Account__r.Market__c AND (Channel__c =:productChannel OR Channel__c = 'Both') ORDER BY Name ASC];            
+	        //productList = [SELECT Id, Name, ProductCode__c, Pack_Quantity__c, RecordType.Name, Channel__c, Brand__r.Name, Brand__r.Spirit_Type__c, Supplier__c, Unit_Size__c, Used_For__c FROM Product__c WHERE IsActive__c = true AND Market__c =: thisPromotion.Account__r.Market__c AND (Channel__c =:productChannel OR Channel__c = 'Both') ORDER BY Sort_Order__c, Name ASC];            
         }
+        productQuery += ' ORDER BY Sort_Order__c, Name';
+        productList = Database.query(productQuery);
+
         if (productList == null) {
             serializedProductList = '';
         } else {
-            serializedProductList = JSON.serialize(productList);
+            List<Product__c> sortedProductList = new List<Product__c>();
+            List<Product__c> productsWithNoMandatoryStatus = new List<Product__c>();
+
+            for(Product__c p : productList) {
+                if (p.Mandatory_Products__r != null && p.Mandatory_Products__r.size() > 0) {
+                    System.debug('product with mandatory product status: ' + p.Name + ', status: ' + p.Mandatory_Products__r);
+                    sortedProductList.add(p);
+                } else {
+                    productsWithNoMandatoryStatus.add(p);
+                }
+            }
+
+            sortedProductList.addAll(productsWithNoMandatoryStatus);
+            for(Product__c p : sortedProductList) {
+                System.debug('product: ' + p.Name);
+            }
+            serializedProductList = JSON.serialize(sortedProductList);
         }
         String soql = 'SELECT Id, Name, Product__c, Product__r.Name, Product_Custom__c, Product_Custom__r.Name, Product_Custom__r.RecordType.Name, ';
         for(Schema.FieldSetMember fsm : pmiFS) {

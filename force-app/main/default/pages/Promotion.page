@@ -169,7 +169,10 @@
         var toggleHTML = '';
         var expandedClass = '';
         var returnURL = '{!$CurrentPage.Parameters.retURL}';
-        var callCardId = '{!$CurrentPage.Parameters.ccId}';
+        
+        var callCardId = '{!$CurrentPage.Parameters.callCardId}';
+        if (callCardId == undefined || callCardId == 'undefined') { callCardId = ''; }
+
         var promotionType = '{!$CurrentPage.Parameters.promotionType}';
         var recordTypeId = '{!$CurrentPage.Parameters.recordTypeId}';
         var thisAccountId = '{!$CurrentPage.Parameters.accountId}';
@@ -886,16 +889,19 @@
         function reloadPromotion() {
             try {
                 j$.each(headerFS[0].fields, function(key, value) {
-                    var val = eval('headerInfo.'+value.fieldPath);
-                    if (value.type == 'date' || value.type == 'datetime' || value.type == 'time') {
-                        var d = new Date(val);
-                        if (inputTypeMap[value.type] == 'date') {
-                            val = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).substr(-2) + '-' + ('0'+d.getDate()).substr(-2);
-                        } else {
-                            val = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).substr(-2) + '-' + ('0'+d.getDate()).substr(-2) + 'T'+('0'+d.getHours()).substr(-2) + ':' +('0'+d.getMinutes()).substr(-2);
+                    console.log('[reloadPromotion] key, value', key, value);
+                    if (headerInfo[value.fieldPath]) {
+                        var val = eval('headerInfo.'+value.fieldPath);
+                        if (value.type == 'date' || value.type == 'datetime' || value.type == 'time') {
+                            var d = new Date(val);
+                            if (inputTypeMap[value.type] == 'date') {
+                                val = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).substr(-2) + '-' + ('0'+d.getDate()).substr(-2);
+                            } else {
+                                val = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).substr(-2) + '-' + ('0'+d.getDate()).substr(-2) + 'T'+('0'+d.getHours()).substr(-2) + ':' +('0'+d.getMinutes()).substr(-2);
+                            }
                         }
+                        j$('input[field="'+value.fieldPath+'"][disabled]').val(val);
                     }
-                    j$('input[field="'+value.fieldPath+'"][disabled]').val(val);
                 });
             }catch(ex) {
                 console.log('[reloadPromotion] exception', ex);
